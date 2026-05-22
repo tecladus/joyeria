@@ -1,0 +1,97 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Monorepo Joyeria — .gitignore
+# Cubre: Java/Maven (backend) + Node/Vite (frontend) + sistema operativo
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Sistema operativo ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ── IDEs ────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+nbproject/
+
+# ── Logs (no se commitean) ──────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Variables de entorno y secretos ─────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env.bak
+secrets.json
+*.pem
+*.key
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BACKEND (Java + Maven + Spring Boot)
+# ─────────────────────────────────────────────────────────────────────────────
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/HELP.md
+backend/*.class
+backend/*.ctxt
+backend/.factorypath
+backend/dependency-reduced-pom.xml
+
+# Si alguien crea un application-local.properties, no se commitea
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-dev.properties
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FRONTEND (Node + Vite + React)
+# ─────────────────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+frontend/.vite/
+frontend/coverage/
+frontend/*.local
+
+# Lockfiles: nos quedamos con package-lock.json y bloqueamos los otros
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Carpetas de despliegue local (si alguien las crea para probar)
+# ─────────────────────────────────────────────────────────────────────────────
+/public/
+deploy/
+tmp/
+temp/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Backups locales
+# ─────────────────────────────────────────────────────────────────────────────
+*.bak
+*.backup
+*.old
+*.orig
+
+# ── Herramientas de Desarrollo Local (Portables) ────────────────────────────
+.jdk17/
+.maven/
+*.bat
+setup-env.ps1
+null
+

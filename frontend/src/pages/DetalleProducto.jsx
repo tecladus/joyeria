@@ -1,0 +1,534 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { getProductoPorId, getProductos, agregarAlCarrito } from '../services/api';
+import TarjetaProducto from '../components/TarjetaProducto';
+
+const formatearPrecio = (precio) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
+
+const precioConDescuento = (precio, descuento) => {
+  if (!descuento || descuento <= 0) return null;
+  return precio * (1 - descuento / 100);
+};
+
+const CATEGORY_TRANSLATIONS = {
+  'Anillos': 'Rings',
+  'Collares': 'Necklaces',
+  'Pulseras': 'Bracelets',
+  'Aros': 'Earrings'
+};
+
+function DetalleProducto({ auth, onActualizarCarrito }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const [producto, setProducto] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+  const [agregando, setAgregando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState('');
+  
+  const [tallaSeleccionada, setTallaSeleccionada] = useState(null);
+  const [imagenActiva, setImagenActiva] = useState('');
+  const [recomendados, setRecomendados] = useState([]);
+  const [enFavoritos, setEnFavoritos] = useState(false);
+  const [mostrarGuiaTallas, setMostrarGuiaTallas] = useState(false);
+
+  // Carga el producto por ID
+  useEffect(() => {
+    setCargando(true);
+    setError('');
+    setTallaSeleccionada(null);
+    getProductoPorId(id)
+      .then((data) => {
+        setProducto(data);
+        if (data && data.imagenUrl) {
+          setImagenActiva(data.imagenUrl);
+        }
+      })
+      .catch((err) => setError(err.message || 'Producto no encontrado.'))
+      .finally(() => setCargando(false));
+  }, [id]);
+
+  // Carga recomendados
+  useEffect(() => {
+    getProductos()
+      .then((datos) => {
+        const filtrados = (datos || []).filter((p) => p.idProducto !== parseInt(id, 10));
+        setRecomendados(filtrados.slice(0, 4));
+      })
+      .catch(() => {});
+  }, [id]);
+
+  const handleAgregarCarrito = async () => {
+    if (!auth?.token || !auth?.idUsuario) {
+      navigate('/login');
+      return;
+    }
+
+    // Si es anillo, requerimos seleccionar talla
+    const esAnillo = producto?.categoria === 'Anillos' || CATEGORY_TRANSLATIONS[producto?.categoria] === 'Rings';
+    if (esAnillo && !tallaSeleccionada) {
+      setError('Por favor, selecciona una talla antes de añadir a la bolsa.');
+      return;
+    }
+
+    setAgregando(true);
+    setError('');
+    try {
+      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, producto.idProducto, 1);
+      const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
+      onActualizarCarrito(nuevoTotal);
+      setMensajeExito('Producto agregado al carrito con éxito');
+      setTimeout(() => setMensajeExito(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Error al agregar al carrito.');
+    } finally {
+      setAgregando(false);
+    }
+  };
+
+  const sinStock = producto && (!producto.stock || producto.stock <= 0);
+  const precioFinal = producto ? precioConDescuento(producto.precio, producto.descuento) : null;
+  const categoriaIngles = producto?.categoria ? (CATEGORY_TRANSLATIONS[producto.categoria] || producto.categoria) : '';
+  const esAnillo = producto?.categoria === 'Anillos' || categoriaIngles === 'Rings';
+
+  // Metadatos dinámicos premium para el detalle
+  const especificaciones = (() => {
+    if (categoriaIngles === 'Rings') {
+      return {
+        material: 'Oro Amarillo Macizo de 18K',
+        gemstone: 'Diamante VVS1, 1.2ct',
+        cut: 'Excelente Brillante',
+        certification: 'Certificado GIA'
+      };
+    }
+    if (categoriaIngles === 'Necklaces') {
+      return {
+        material: 'Montura de Oro Amarillo de 18K',
+        gemstone: 'Perla Keshi Aura, 9mm',
+        cut: 'Orgánico Seleccionado a Mano',
+        certification: 'Certificado Aura'
+      };
+    }
+    if (categoriaIngles === 'Earrings') {
+      return {
+        material: 'Oro Blanco Macizo de 18K',
+        gemstone: 'Diamantes Redondos VVS2, 0.6ct',
+        cut: 'Corte Ideal',
+        certification: 'Certificado Aura'
+      };
+    }
+    return {
+      material: 'Latón con Baño de Oro de 18K',
+      gemstone: 'Diamantes Éticos de Corte Redondo',
+      cut: 'Corte Muy Bueno',
+      certification: 'Garantía de Calidad'
+    };
+  })();
+
+  const imagenesSecundarias = producto ? [
+    producto.imagenUrl,
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuADKa9h_aHbjagV89hae4PYWA6Xq6zFvrBuyi4PC64wp7nX-Sha9aGU22cwSpUFB7j98bc5Uhhx2bF0WR40siw-v2UfYCLdQ52KDp_FkkSZfAtX87pMpKa9v3_8cMcNeM2s90DzGIqQm3ujzZwfuElev4VmPhnhcbZsfvLIjdd0d20Bq_Vjw2BkH_wWyHw_XZIohYnhnrPBM7RKEYqLvcgrIU-PoLBJ53MnCqcjDnZhwLIU4juE6mjkcSyziunqdPDeTakygWvmATE',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCXqU8StEwhr6lJQWX09Rf7_PQ1NtVtg7Jh9qmS8susA5iaNIZsiIvoCwyMs8xvnvcGKYih7xun_aIAOZJbJCJQy-zWNrLoTItnxx4OnxbEIcvZW3vfNgbpNI9_fFEBOTWBXlSnEZ9P7KflI87OlHuZChH0k7unwRDUoeUeiVp_G2wRCF_rw2xVLQHfWj4hQriUdmpr6DzRfP5npWi2_EoQdgFQ4Q7f60QjOMaW6d4rLcEVYadt0L2yP7AJ-nvU8HNuxMBURZtgvhs',
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCswhrQ7l7L2JtTVL9BoIJ5E-W8sTX4X1K2dGExCM4bCC3jlJqMcL9ndxLdeh48kLgnT4zM9iHyAKbsT54GU9lXf_VBPz9c6SBfWogVMTCdRCM2DEYo8p7uc-hwYJOh-6L27PZ1MlgjNjaprc8zLWEQOjmThqJm4gvBR8B1gfI2olOgSopU__fBpT39r67y1Z83_sUjR5XpENMiif8ujJWzoAWNmvRu6EKRbn1MCF5XBJXRqCzIviim7YtbRqygwazthEhQtMYvrtE'
+  ].filter(Boolean) : [];
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="font-label-caps text-label-caps text-primary tracking-widest animate-pulse text-xs">
+          Cargando detalles del atelier...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="pt-32 pb-20 bg-background text-on-surface">
+      <div className="max-w-container-max mx-auto px-6 md:px-margin-desktop">
+        
+        {/* Breadcrumb */}
+        <nav className="flex items-center space-x-2 font-label-caps text-[10px] text-outline uppercase tracking-wider mb-8">
+          <Link to="/productos" className="hover:text-primary transition-colors">Colecciones</Link>
+          <span className="text-outline-variant">/</span>
+          {producto?.categoria && (
+            <>
+              <span className="text-secondary">{producto.categoria}</span>
+              <span className="text-outline-variant">/</span>
+            </>
+          )}
+          <span className="text-on-surface font-semibold truncate max-w-[200px]">{producto?.nombre}</span>
+        </nav>
+
+        {error && (
+          <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-8 font-body-md text-sm">
+            {error}
+          </div>
+        )}
+
+        {producto && (
+          <div>
+            {/* Split Product Details Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+              
+              {/* Columna Izquierda: Imagen y Galería de Miniaturas */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="relative overflow-hidden aspect-[4/5] bg-surface-container-low border border-outline-variant/10 group rounded-sm shadow-sm">
+                  {imagenActiva ? (
+                    <img
+                      src={imagenActiva}
+                      alt={producto.nombre}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-4xl text-outline-variant/30">
+                      ◇
+                    </div>
+                  )}
+                  {producto.descuento > 0 && (
+                    <span className="absolute top-4 left-4 px-3 py-1 font-label-caps text-[9px] border border-primary text-primary backdrop-blur-md bg-white/20 uppercase tracking-widest">
+                      -{producto.descuento}% DTO
+                    </span>
+                  )}
+                </div>
+
+                {/* Thumbnails Row */}
+                {imagenesSecundarias.length > 1 && (
+                  <div className="grid grid-cols-4 gap-4">
+                    {imagenesSecundarias.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setImagenActiva(img)}
+                        className={`aspect-square overflow-hidden border bg-surface-container-low rounded-sm cursor-pointer transition-all duration-300 ${
+                          imagenActiva === img 
+                            ? 'border-primary outline outline-1 outline-primary/45 shadow-sm' 
+                            : 'border-outline-variant/20 hover:border-outline/50'
+                        }`}
+                      >
+                        <img src={img} alt={`Ángulo ${idx + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Columna Derecha: Información del Producto, Tallas, Compra */}
+              <div className="lg:col-span-5 space-y-8">
+                <div>
+                  {producto.categoria && (
+                    <span className="font-label-caps text-label-caps text-primary mb-2 block tracking-widest uppercase text-xs">
+                      {producto.categoria}
+                    </span>
+                  )}
+                  <h1 className="font-display-lg text-4xl md:text-5xl text-on-surface leading-tight font-light mb-4">
+                    {producto.nombre}
+                  </h1>
+                  
+                  {/* Precios */}
+                  <div className="flex items-baseline gap-4 mt-6">
+                    <span className="font-display-lg text-2xl md:text-3xl text-primary font-light">
+                      {formatearPrecio(precioFinal ?? producto.precio)}
+                    </span>
+                    {precioFinal && (
+                      <span className="font-body-md text-lg text-secondary line-through">
+                        {formatearPrecio(producto.precio)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* El Diseño Description */}
+                <div className="border-t border-outline-variant/10 pt-6">
+                  <h4 className="font-label-caps text-[10px] tracking-widest text-outline uppercase block mb-3 font-semibold">
+                    El Diseño
+                  </h4>
+                  <p className="font-body-lg text-secondary text-sm leading-relaxed font-light">
+                    {producto.descripcion || 'Inspirado en el concepto de carácter moral y verdad eterna. Esta pieza magistralmente elaborada representa un estándar de fuerza silenciosa, diseñada para lucirse como una declaración de estilo y transmitirse de generación en generación.'}
+                  </p>
+                </div>
+
+                {/* Especificaciones */}
+                <div className="border-t border-outline-variant/10 pt-6">
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-8 text-xs">
+                    <div>
+                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Material</span>
+                      <span className="font-body-md text-on-surface font-light">{especificaciones.material}</span>
+                    </div>
+                    <div>
+                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Gema</span>
+                      <span className="font-body-md text-on-surface font-light">{especificaciones.gemstone}</span>
+                    </div>
+                    <div>
+                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Corte</span>
+                      <span className="font-body-md text-on-surface font-light">{especificaciones.cut}</span>
+                    </div>
+                    <div>
+                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Certificación</span>
+                      <span className="font-body-md text-on-surface font-light">{especificaciones.certification}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selector de Tallas (solo para Anillos) */}
+                {esAnillo && (
+                  <div className="border-t border-outline-variant/10 pt-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-label-caps text-[10px] tracking-widest text-outline uppercase font-semibold">Seleccionar Talla</span>
+                      <button 
+                        onClick={() => setMostrarGuiaTallas(true)}
+                        className="font-label-caps text-[9px] text-outline/80 hover:text-primary uppercase tracking-wider cursor-pointer underline bg-transparent border-0"
+                      >
+                        Guía de Tallas
+                      </button>
+                    </div>
+                    <div className="flex gap-3">
+                      {[5, 6, 7, 8, 9].map((talla) => (
+                        <button
+                          key={talla}
+                          onClick={() => setTallaSeleccionada(talla)}
+                          className={`w-10 h-10 border text-xs font-body-md transition-all flex items-center justify-center rounded-sm cursor-pointer ${
+                            tallaSeleccionada === talla
+                              ? 'border-on-surface bg-on-surface text-background font-semibold'
+                              : 'border-outline-variant/40 hover:border-primary text-secondary'
+                          }`}
+                        >
+                          {talla}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Metadatos (Stock, Vendedor) */}
+                <div className="border-t border-outline-variant/10 pt-6 space-y-3 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest">Disponibilidad</span>
+                    <span className={`font-body-md font-semibold ${producto.stock <= 0 ? 'text-error' : 'text-on-surface'}`}>
+                      {producto.stock <= 0 ? 'Agotado' : `${producto.stock} piezas disponibles`}
+                    </span>
+                  </div>
+                  {producto.vendedor && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest">Artesano del Atelier</span>
+                      <span className="font-body-md text-secondary font-light">{producto.vendedor}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Acciones de Botones */}
+                <div className="border-t border-outline-variant/10 pt-6 space-y-4">
+                  {mensajeExito && (
+                    <div className="bg-surface-container border border-outline-variant text-on-surface p-4 rounded flex items-center gap-2 font-label-caps text-[10px] tracking-widest uppercase">
+                      <span className="material-symbols-outlined text-primary text-sm">done</span>
+                      {mensajeExito}
+                    </div>
+                  )}
+
+                  {auth?.rol === 'VENDEDOR' ? (
+                    <div className="bg-surface-container text-secondary p-4 rounded text-center text-xs font-body-md">
+                      Los vendedores no pueden realizar compras.
+                    </div>
+                  ) : (
+                    <div className="flex gap-4">
+                      {/* Add to Bag Button */}
+                      <button
+                        disabled={sinStock || agregando}
+                        onClick={handleAgregarCarrito}
+                        className="flex-grow py-5 bg-on-surface text-background font-label-caps text-label-caps hover:bg-primary transition-all duration-500 disabled:opacity-50 disabled:hover:bg-on-surface disabled:cursor-not-allowed uppercase tracking-widest text-xs font-semibold cursor-pointer rounded-sm"
+                      >
+                        {agregando ? 'Añadiendo...' : sinStock ? 'Agotado' : 'Añadir a la Bolsa'}
+                      </button>
+
+                      {/* Add to Wishlist Button */}
+                      <button
+                        onClick={() => setEnFavoritos(!enFavoritos)}
+                        className={`px-5 border transition-all flex items-center justify-center cursor-pointer rounded-sm ${
+                          enFavoritos 
+                            ? 'border-primary bg-primary/5 text-primary' 
+                            : 'border-outline-variant/40 text-secondary hover:border-primary hover:text-primary'
+                        }`}
+                        title="Añadir a la Lista de Deseos"
+                      >
+                        <span className={`material-symbols-outlined text-xl ${enFavoritos ? 'fill-1' : ''}`}>
+                          favorite
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Envíos y Soporte microinfo */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-3 text-xs text-secondary font-body-md font-light">
+                    <span className="material-symbols-outlined text-outline text-lg">local_shipping</span>
+                    <span>Envío asegurado de cortesía en un plazo de 48 horas.</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-secondary font-body-md font-light">
+                    <span className="material-symbols-outlined text-outline text-lg">verified</span>
+                    <span>Garantía de por vida y servicio de limpieza.</span>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+
+            {/* Middle Section: The Atelier Process */}
+            <section className="mt-32 pt-20 border-t border-outline-variant/20 text-center">
+              <span className="font-label-caps text-label-caps text-primary tracking-widest uppercase block mb-3 text-xs">
+                El Proceso del Atelier
+              </span>
+              <h2 className="font-display-lg text-3xl md:text-4xl text-on-surface mb-4 font-light">
+                Meticulosamente Elaborado para la Durabilidad
+              </h2>
+              <p className="font-body-md text-secondary text-sm max-w-xl mx-auto mb-16 font-light">
+                Cada pieza en Aura se somete a un riguroso proceso de inspección de 14 puntos. Desde la selección de minerales en bruto hasta el pulido final a mano, la precisión es nuestro único estándar.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-12 h-12 bg-surface-container flex items-center justify-center rounded-full text-primary border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-xl">workspace_premium</span>
+                  </div>
+                  <h3 className="font-label-caps text-label-caps text-on-surface uppercase tracking-widest text-xs font-semibold">
+                    Libre de Conflictos
+                  </h3>
+                  <p className="font-body-md text-secondary text-xs leading-relaxed max-w-xs font-light">
+                    Todos los diamantes provienen de proveedores que se adhieren al Proceso de Kimberley, garantizando absoluta tranquilidad.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-12 h-12 bg-surface-container flex items-center justify-center rounded-full text-primary border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-xl">architecture</span>
+                  </div>
+                  <h3 className="font-label-caps text-label-caps text-on-surface uppercase tracking-widest text-xs font-semibold">
+                    Diseño Original
+                  </h3>
+                  <p className="font-body-md text-secondary text-xs leading-relaxed max-w-xs font-light">
+                    Bocetado a mano en nuestro estudio de Amberes, cada montura es una hazaña arquitectónica única de equilibrio y luz.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-12 h-12 bg-surface-container flex items-center justify-center rounded-full text-primary border border-outline-variant/10">
+                    <span className="material-symbols-outlined text-xl">blur_on</span>
+                  </div>
+                  <h3 className="font-label-caps text-label-caps text-on-surface uppercase tracking-widest text-xs font-semibold">
+                    Pulido de Firma
+                  </h3>
+                  <p className="font-body-md text-secondary text-xs leading-relaxed max-w-xs font-light">
+                    Nuestra técnica patentada de acabado espejado garantiza que su joyería mantenga su brillo y esplendor durante décadas.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Bottom Section: Recomendaciones */}
+            {recomendados.length > 0 && (
+              <section className="mt-32 pt-20 border-t border-outline-variant/20">
+                <div className="flex justify-between items-center mb-12">
+                  <div>
+                    <span className="font-label-caps text-label-caps text-primary tracking-widest uppercase block mb-2 text-xs">
+                      Completar el Juego
+                    </span>
+                    <h2 className="font-display-lg text-2xl md:text-3xl text-on-surface font-light">
+                      También te Podría Gustar
+                    </h2>
+                  </div>
+                  <Link to="/productos" className="font-label-caps text-label-caps text-outline hover:text-primary uppercase tracking-wider text-xs underline">
+                    Ver Todo
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+                  {recomendados.map((prod) => (
+                    <TarjetaProducto
+                      key={prod.idProducto}
+                      producto={prod}
+                      auth={auth}
+                      onAgregarCarrito={handleAgregarCarrito}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Guía de Tallas */}
+      {mostrarGuiaTallas && (
+        <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-background border border-outline-variant/20 max-w-md w-full p-8 rounded-xl luxury-shadow space-y-6 animate-scale-up">
+            <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
+              <h2 className="font-display-lg text-2xl text-on-surface font-light">
+                Guía de Tallas de Anillos
+              </h2>
+              <button 
+                onClick={() => setMostrarGuiaTallas(false)}
+                className="material-symbols-outlined text-secondary hover:text-primary bg-transparent border-0 cursor-pointer text-xl"
+              >
+                close
+              </button>
+            </div>
+
+            <p className="font-body-md text-secondary leading-relaxed text-xs font-light">
+              Para encontrar su ajuste perfecto, mida el diámetro interno de un anillo que le quede cómodo y compárelo con la siguiente tabla de equivalencias:
+            </p>
+
+            {/* Tabla de tallas */}
+            <div className="border border-outline-variant/15 rounded overflow-hidden">
+              <table className="w-full text-left text-xs font-body-md">
+                <thead>
+                  <tr className="bg-surface-container-low border-b border-outline-variant/15 font-label-caps text-[10px] tracking-wider text-on-surface">
+                    <th className="p-3 font-semibold uppercase">Talla US</th>
+                    <th className="p-3 font-semibold uppercase">Diámetro Interno (mm)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/10 text-secondary">
+                  <tr>
+                    <td className="p-3 font-semibold text-on-surface">5</td>
+                    <td className="p-3">15.7 mm</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-semibold text-on-surface">6</td>
+                    <td className="p-3">16.5 mm</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-semibold text-on-surface">7</td>
+                    <td className="p-3">17.3 mm</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-semibold text-on-surface">8</td>
+                    <td className="p-3">18.2 mm</td>
+                  </tr>
+                  <tr>
+                    <td className="p-3 font-semibold text-on-surface">9</td>
+                    <td className="p-3">19.0 mm</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p className="font-body-md text-primary leading-relaxed text-[11px] font-light italic">
+              ◇ Nota: Si se encuentra entre dos tallas, le recomendamos seleccionar la talla superior para asegurar la máxima comodidad de su pieza.
+            </p>
+
+            <div className="flex justify-end pt-4">
+              <button
+                onClick={() => setMostrarGuiaTallas(false)}
+                className="w-full py-4 bg-on-surface text-background font-label-caps text-label-caps hover:bg-primary transition-all duration-300 uppercase tracking-widest text-xs font-semibold cursor-pointer rounded-sm"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+export default DetalleProducto;

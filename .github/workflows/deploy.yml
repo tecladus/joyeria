@@ -1,0 +1,25 @@
+name: Deploy a Producción
+
+on:
+  push:
+    branches:
+      - main # O el nombre de tu rama principal (ej: master)
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout de Código
+        uses: actions/checkout@v3
+
+      - name: Sincronizar Código a Carpeta de Producción
+        run: |
+          mkdir -p /var/www/temp_facu
+          rsync -av --delete --exclude='node_modules' --exclude='target' --exclude='.git' --exclude='logs' --exclude='frontend/dist' ./ /var/www/temp_facu/
+
+      - name: Ejecutar Script de Despliegue Local
+        run: |
+          cd /var/www/temp_facu
+          chmod +x deploy.sh
+          ./deploy.sh

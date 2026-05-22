@@ -1,0 +1,137 @@
+package com.uade.tpo.joyeria.service;
+
+import com.uade.tpo.joyeria.dto.OrdenResponse;
+import com.uade.tpo.joyeria.entity.*;
+import com.uade.tpo.joyeria.exception.RecursoNoEncontradoException;
+import com.uade.tpo.joyeria.exception.StockInsuficienteException;
+import com.uade.tpo.joyeria.repository.OrdenRepository;
+import com.uade.tpo.joyeria.repository.ProductoRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+// Maneja el checkout y el historial de ordenes.
+// El checkout convierte el carrito en una orden permanente descontando stock y cerrando el carrito.
+@Service
+public class OrdenService {
+
+    private final OrdenRepository ordenRepository;
+    private final ProductoRepository productoRepository;
+    private final UsuarioService usuarioService;
+    private final CarritoService carritoService;
+
+    public OrdenService(OrdenRepository ordenRepository,
+                        ProductoRepository productoRepository,
+                        UsuarioService usuarioService,
+                        CarritoService carritoService) {
+        this.ordenRepository = ordenRepository;
+        this.productoRepository = productoRepository;
+        this.usuarioService = usuarioService;
+        this.carritoService = carritoService;
+    }
+
+    // @Transactional es critico: agrupa todas las operaciones en una sola transaccion.
+    // Si algo falla (ej: stock insuficiente en el tercer item), se revierte todo. O todo pasa, o nada.
+    // Pasos: validar carrito → validar stock → crear orden → descontar stock → cerrar carrito.
+    @Transactional
+    public OrdenResponse checkout(Long usuarioId) {
+        Usuario usuario = usuarioService.obtenerPorId(usuarioId);
+        Carrito carrito = carritoService.obtenerOCrearCarritoActivo(usuario);
+
+        if (carrito.getItems().isEmpty()) {
+            throw new RecursoNoEncontradoException("El carrito esta vacio");
+        }
+
+        // Validamos el stock de TODOS los items antes de modificar cualquier cosa.
+        for (ItemCarrito item : carrito.getItems()) {
+            if (item.getProducto().getStock() < item.getCantidad()) {
+                throw new StockInsuficienteException(
+                        "Stock insuficiente para: " + item.getProducto().getNombre() +
+                        ". Disponible: " + item.getProducto().getStock() +
+                        ", requerido: " + item.getCantidad());
+            }
+        }
+
+        Orden orden = new Orden();
+        orden.setUsuario(usuario);
+        orden.setFecha(LocalDateTime.now());
+        orden.setEstado("PENDIENTE");
+
+        List<DetalleOrden> detalles = carrito.getItems().stream()
+                .map(item -> {
+                    Producto producto = item.getProducto();
+
+                    producto.setStock(producto.getStock() - item.getCantidad());
+                    productoRepository.save(producto);
+
+                    DetalleOrden detalle = new DetalleOrden();
+                    detalle.setOrden(orden);
+                    detalle.setProducto(producto);
+                    detalle.setCantidad(item.getCantidad());
+                    // El precio se "congela" en el detalle. Si cambia despues, el historial queda intacto.
+                    detalle.setPrecioUnitario(producto.getPrecio());
+                    return detalle;
+                })
+                .collect(Collectors.toList());
+
+        orden.setDetalles(detalles);
+
+        BigDecimal total = detalles.stream()
+                .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        orden.setTotal(total);
+
+        // Cerramos el carrito. La proxima compra arranca con uno nuevo.
+        carrito.setActivo(false);
+
+        Orden guardada = ordenRepository.save(orden);
+        return mapearAResponse(guardada);
+    }
+
+    // El ID del usuario sale del token, garantizando que cada usuario solo ve sus propias ordenes.
+    public List<OrdenResponse> listarPorUsuario(Long usuarioId) {
+        Usuario usuario = usuarioService.obtenerPorId(usuarioId);
+        return ordenRepository.findByUsuario(usuario).stream()
+                .map(this::mapearAResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Si la orden existe pero es de otro usuario, devolvemos 404 para no revelar que existe.
+    public OrdenResponse obtenerPorId(Long ordenId, Long usuarioId) {
+        Orden orden = ordenRepository.findById(ordenId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada: " + ordenId));
+
+        if (!orden.getUsuario().getIdUsuario().equals(usuarioId)) {
+            throw new RecursoNoEncontradoException("Orden no encontrada: " + ordenId);
+        }
+
+        return mapearAResponse(orden);
+    }
+
+    private OrdenResponse mapearAResponse(Orden orden) {
+        var detalles = orden.getDetalles().stream()
+                .map(d -> OrdenResponse.DetalleOrdenResponse.builder()
+                        .idDetalle(d.getIdDetalle())
+                        .nombreProducto(d.getProducto().getNombre())
+                        .cantidad(d.getCantidad())
+                        .precioUnitario(d.getPrecioUnitario())
+                        // El subtotal se calcula al mapear, no se guarda en la BD.
+                        .subtotal(d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
+                        .build())
+                .collect(Collectors.toList());
+
+        return OrdenResponse.builder()
+                .idOrden(orden.getIdOrden())
+                .fecha(orden.getFecha())
+                .estado(orden.getEstado())
+                .total(orden.getTotal())
+                .usuario(orden.getUsuario().getNombre())
+                .detalles(detalles)
+                .build();
+    }
+}
