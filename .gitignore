@@ -30,6 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # ── Variables de entorno y secretos ─────────────────────────────────────────
+LIMPIAR.sh
+LIMPIAR.md
 .env
 .env.local
 .env.development.local
