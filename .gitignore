@@ -56,6 +56,7 @@ backend/*.class
 backend/*.ctxt
 backend/.factorypath
 backend/dependency-reduced-pom.xml
+*.sql
 
 # Si alguien crea un application-local.properties, no se commitea
 backend/src/main/resources/application-local.properties
