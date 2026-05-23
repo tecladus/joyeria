@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getProductoPorId, getProductos, agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
+import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -21,13 +22,14 @@ const CATEGORY_TRANSLATIONS = {
 function DetalleProducto({ auth, onActualizarCarrito }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+  const deviceMultiplier = useDeviceMultiplier();
+
   const [producto, setProducto] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [agregando, setAgregando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
-  
+
   const [tallaSeleccionada, setTallaSeleccionada] = useState(null);
   const [imagenActiva, setImagenActiva] = useState('');
   const [recomendados, setRecomendados] = useState([]);
@@ -89,7 +91,10 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
   };
 
   const sinStock = producto && (!producto.stock || producto.stock <= 0);
-  const precioFinal = producto ? precioConDescuento(producto.precio, producto.descuento) : null;
+  const precioConDesc = producto ? precioConDescuento(producto.precio, producto.descuento) : null;
+  const precioBase = precioConDesc ?? producto?.precio;
+  const precioFinal = producto ? adjustPriceByDevice(precioBase) : null;
+  const precioOriginalAjustado = producto ? adjustPriceByDevice(producto.precio) : null;
   const categoriaIngles = producto?.categoria ? (CATEGORY_TRANSLATIONS[producto.categoria] || producto.categoria) : '';
   const esAnillo = producto?.categoria === 'Anillos' || categoriaIngles === 'Rings';
 
@@ -226,14 +231,31 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                   </h1>
                   
                   {/* Precios */}
-                  <div className="flex items-baseline gap-4 mt-6">
-                    <span className="font-display-lg text-2xl md:text-3xl text-primary font-light">
-                      {formatearPrecio(precioFinal ?? producto.precio)}
-                    </span>
-                    {precioFinal && (
-                      <span className="font-body-md text-lg text-secondary line-through">
-                        {formatearPrecio(producto.precio)}
+                  <div className="space-y-3 mt-6">
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-display-lg text-2xl md:text-3xl text-primary font-light">
+                        {formatearPrecio(precioFinal)}
                       </span>
+                      {precioConDesc && (
+                        <span className="font-body-md text-lg text-secondary line-through">
+                          {formatearPrecio(precioOriginalAjustado)}
+                        </span>
+                      )}
+                    </div>
+                    {deviceMultiplier.multiplier !== 1.0 && (
+                      <div className={`flex items-center gap-2 px-4 py-2 rounded-sm font-label-caps text-[10px] tracking-wider uppercase font-semibold ${
+                        deviceMultiplier.multiplier > 1
+                          ? 'bg-error/10 text-error border border-error/20'
+                          : 'bg-success/10 text-success border border-success/20'
+                      }`}>
+                        <span className="material-symbols-outlined text-sm">
+                          {deviceMultiplier.multiplier > 1 ? 'arrow_upward' : 'arrow_downward'}
+                        </span>
+                        {deviceMultiplier.multiplier > 1
+                          ? `+${Math.round((deviceMultiplier.multiplier - 1) * 100)}% ${deviceMultiplier.label}`
+                          : `${Math.round((1 - deviceMultiplier.multiplier) * 100)}% descuento - ${deviceMultiplier.label}`
+                        }
+                      </div>
                     )}
                   </div>
                 </div>

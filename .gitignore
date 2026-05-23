@@ -21,6 +21,7 @@ desktop.ini
 .project
 .settings/
 nbproject/
+.claude
 
 # ── Logs (no se commitean) ──────────────────────────────────────────────────
 logs/
