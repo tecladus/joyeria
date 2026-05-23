@@ -19,6 +19,9 @@ jobs:
           rsync -av --delete --exclude='node_modules' --exclude='target' --exclude='.git' --exclude='logs' --exclude='frontend/dist' ./ /var/www/temp_facu/
 
       - name: Ejecutar Script de Despliegue Local
+        env:
+          DEPLOY_PATH: /var/www/temp_facu
+          SERVICE_NAME: joyeria-backend
         run: |
           cd /var/www/temp_facu
           chmod +x deploy.sh

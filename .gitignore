@@ -41,6 +41,8 @@ LIMPIAR.md
 secrets.json
 *.pem
 *.key
+*.local.sh
+deploy.conf
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BACKEND (Java + Maven + Spring Boot)
