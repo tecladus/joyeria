@@ -22,21 +22,20 @@ function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
       onClick={() => navigate(`/productos/${producto.idProducto}`)}
     >
       {/* Contenedor de la Imagen */}
-      <div className="relative overflow-hidden aspect-[4/5] bg-surface-container-low border border-outline-variant/10 transition-all duration-700 ease-in-out">
-        {producto.imagenUrl ? (
+      <div className="relative overflow-hidden aspect-[4/5] bg-gradient-to-br from-surface-container via-surface-container-low to-surface-container border border-outline-variant/10 transition-all duration-700 ease-in-out">
+        {producto.imagenUrl && (
           <img
             src={producto.imagenUrl}
             alt={producto.nombre}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={(e) => { 
-              e.target.style.display = 'none'; 
-              e.target.nextSibling.style.display = 'flex'; 
+            onError={(e) => {
+              e.style.display = 'none';
             }}
           />
-        ) : null}
-        <div 
-          className="w-full h-full object-cover bg-surface-container flex items-center justify-center text-4xl text-outline-variant/40"
-          style={{ display: producto.imagenUrl ? 'none' : 'flex' }}
+        )}
+        <div
+          className="absolute inset-0 w-full h-full bg-surface-container flex items-center justify-center text-5xl text-outline-variant/20 font-light"
+          id={`fallback-${producto.idProducto}`}
         >
           ◇
         </div>

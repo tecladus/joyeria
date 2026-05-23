@@ -138,6 +138,7 @@ public class ProductoService {
                 .descuento(producto.getDescuento())
                 .stock(producto.getStock())
                 .imagenUrl(producto.getImagenUrl())
+                .idCategoria(producto.getCategoria().getIdCategoria())
                 .categoria(producto.getCategoria().getNombre())
                 .vendedor(producto.getVendedor().getNombre())
                 .build();

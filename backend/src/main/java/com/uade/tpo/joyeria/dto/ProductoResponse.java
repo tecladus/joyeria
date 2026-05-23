@@ -17,6 +17,7 @@ public class ProductoResponse {
     private BigDecimal descuento;
     private Integer stock;
     private String imagenUrl;
+    private Long idCategoria;
     private String categoria;
     private String vendedor;
 }
