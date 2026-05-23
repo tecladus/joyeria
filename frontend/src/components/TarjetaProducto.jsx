@@ -91,27 +91,13 @@ function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
             {producto.nombre}
           </h4>
         </div>
-        <div className="mt-2 flex flex-col gap-1">
-          <div className="flex items-baseline gap-2">
-            <span className="font-body-md text-on-surface font-semibold">
-              {formatearPrecio(precioFinal)}
-            </span>
-            {precioConDesc && (
-              <span className="font-body-md text-secondary line-through text-xs">
-                {formatearPrecio(precioOriginalAjustado)}
-              </span>
-            )}
-          </div>
-          {deviceMultiplier.multiplier !== 1.0 && (
-            <span className={`font-label-caps text-[9px] tracking-wider uppercase font-semibold ${
-              deviceMultiplier.multiplier > 1
-                ? 'text-error'
-                : 'text-success'
-            }`}>
-              {deviceMultiplier.multiplier > 1
-                ? `+${Math.round((deviceMultiplier.multiplier - 1) * 100)}% ${deviceMultiplier.label}`
-                : `${Math.round((1 - deviceMultiplier.multiplier) * 100)}% desc. ${deviceMultiplier.label}`
-              }
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="font-body-md text-on-surface font-semibold">
+            {formatearPrecio(precioFinal)}
+          </span>
+          {precioConDesc && (
+            <span className="font-body-md text-secondary line-through text-xs">
+              {formatearPrecio(precioOriginalAjustado)}
             </span>
           )}
         </div>

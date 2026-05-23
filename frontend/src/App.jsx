@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import RutaProtegida from './components/RutaProtegida';
-import DeviceReportModal from './components/DeviceReportModal';
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/Login';
@@ -91,7 +90,6 @@ function App() {
           </Routes>
         </div>
         <Footer />
-        <DeviceReportModal />
       </div>
     </BrowserRouter>
   );
