@@ -17,14 +17,15 @@ function Productos({ auth, onActualizarCarrito }) {
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
 
-  // Sincronización de categoría activa con Query Params de React Router
+  // Sincronización de categoría activa y búsqueda con Query Params de React Router
   const [searchParams, setSearchParams] = useSearchParams();
   const catQueryParam = searchParams.get('categoria');
+  const searchQueryParam = searchParams.get('search');
 
   const [categoriaActiva, setCategoriaActiva] = useState(null);
 
   // Estados de filtros
-  const [busqueda, setBusqueda] = useState('');
+  const [busqueda, setBusqueda] = useState(searchQueryParam || '');
   const [orden, setOrden] = useState('Newest'); // Newest, PriceLow, PriceHigh, Name
   const [precioMin, setPrecioMin] = useState('');
   const [precioMax, setPrecioMax] = useState('');
@@ -42,6 +43,11 @@ function Productos({ auth, onActualizarCarrito }) {
       setCategoriaActiva(null);
     }
   }, [catQueryParam]);
+
+  // Sincronizar query param de búsqueda
+  useEffect(() => {
+    setBusqueda(searchQueryParam || '');
+  }, [searchQueryParam]);
 
   // Carga todas las categorías al montar
   useEffect(() => {
@@ -330,25 +336,6 @@ function Productos({ auth, onActualizarCarrito }) {
                     Limpiar Filtros
                   </button>
                 )}
-              </div>
-
-              {/* Buscador */}
-              <div className="border-t border-outline-variant/20 pt-8">
-                <h3 className="font-label-caps text-label-caps text-on-surface mb-3 uppercase tracking-wider text-xs font-semibold">
-                  Buscar palabra clave
-                </h3>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    placeholder="Buscar en la colección..."
-                    className="w-full bg-transparent border-0 border-b border-outline py-2 px-0 focus:ring-0 focus:border-primary placeholder:text-outline/40 font-body-md text-sm text-on-surface"
-                  />
-                  <span className="absolute right-0 top-2 material-symbols-outlined text-outline text-lg">
-                    search
-                  </span>
-                </div>
               </div>
             </div>
           </aside>

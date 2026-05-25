@@ -64,10 +64,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/usuarios/*/rol").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/usuarios/*").hasAuthority("ADMIN")
 
-                // Escritura de productos: VENDEDOR o ADMIN. Eliminacion tambien por MODERATOR.
-                .requestMatchers(HttpMethod.POST, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                // Escritura de productos: VENDEDOR, ADMIN o MODERATOR.
+                .requestMatchers(HttpMethod.POST, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.PUT, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.PATCH, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
                 .requestMatchers(HttpMethod.DELETE, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
 
                 // Categorias: GET publico sin token, escritura VENDEDOR o ADMIN.

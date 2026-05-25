@@ -83,7 +83,7 @@ function App() {
             <Route
               path="/vendedor"
               element={
-                <RutaProtegida auth={auth} rolRequerido="VENDEDOR">
+                <RutaProtegida auth={auth} rolRequerido={['VENDEDOR', 'ADMIN', 'MODERATOR']}>
                   <PanelVendedor auth={auth} />
                 </RutaProtegida>
               }

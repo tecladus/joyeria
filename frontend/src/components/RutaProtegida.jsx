@@ -5,8 +5,11 @@ function RutaProtegida({ auth, children, rolRequerido }) {
   if (!auth.token) {
     return <Navigate to="/login" replace />;
   }
-  if (rolRequerido && auth.rol !== rolRequerido) {
-    return <Navigate to="/productos" replace />;
+  if (rolRequerido) {
+    const rolesAllowed = Array.isArray(rolRequerido) ? rolRequerido : [rolRequerido];
+    if (!rolesAllowed.includes(auth.rol)) {
+      return <Navigate to="/productos" replace />;
+    }
   }
   return children;
 }

@@ -105,14 +105,28 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
         {/* Enlaces de navegación derecha (Desktop) */}
         <div className="flex-1 flex justify-end items-center gap-6">
           <div className="hidden md:flex items-center gap-6 relative" ref={dropdownRef}>
-            {/* Icono de Búsqueda */}
-            <Link
-              to="/productos"
-              className="material-symbols-outlined text-on-surface hover:text-primary transition-colors duration-300 text-2xl"
-              title="Buscar"
+            {/* Buscador de Escritorio */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const query = e.target.search.value;
+                navigate(`/productos?search=${encodeURIComponent(query)}`);
+              }} 
+              className="relative flex items-center bg-surface-container-low/60 border border-outline-variant/10 rounded px-2.5 py-1 focus-within:border-primary/55 transition-all duration-300 mr-2"
             >
-              search
-            </Link>
+              <input
+                type="text"
+                name="search"
+                placeholder="Buscar..."
+                className="bg-transparent border-0 outline-none text-xs w-24 md:w-32 focus:w-40 transition-all duration-500 text-on-surface font-body-md placeholder:text-outline/45"
+              />
+              <button 
+                type="submit" 
+                className="material-symbols-outlined text-outline hover:text-primary transition-colors text-lg flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer"
+              >
+                search
+              </button>
+            </form>
 
             {/* Icono de Usuario (Perfil/Acciones) */}
             <div className="relative">
@@ -155,13 +169,13 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
                         </span>
                       </div>
                       
-                      {esVendedor && (
+                      {(esVendedor || esAdmin || esModerador) && (
                         <Link
                           to="/vendedor"
                           onClick={() => setDropdownAbierto(false)}
                           className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors duration-200"
                         >
-                          Panel Vendedor
+                          {esVendedor ? 'Panel Vendedor' : 'Publicar Joyas'}
                         </Link>
                       )}
 
@@ -243,6 +257,29 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
       {/* Menú Desplegable Móvil */}
       {menuMovilAbierto && (
         <div className="absolute top-20 left-0 w-full bg-background border-b border-outline-variant/10 py-6 px-6 flex flex-col gap-4 md:hidden z-40 transition-all duration-300 ambient-shadow">
+          {/* Buscador Móvil */}
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const query = e.target.search.value;
+              setMenuMovilAbierto(false);
+              navigate(`/productos?search=${encodeURIComponent(query)}`);
+            }} 
+            className="relative flex items-center bg-surface-container-low/60 border border-outline-variant/10 rounded px-3 py-2 focus-within:border-primary/50 transition-all duration-300 mb-2"
+          >
+            <input
+              type="text"
+              name="search"
+              placeholder="Buscar pieza..."
+              className="bg-transparent border-0 outline-none text-sm w-full text-on-surface font-body-md placeholder:text-outline/40"
+            />
+            <button 
+              type="submit" 
+              className="material-symbols-outlined text-outline hover:text-primary transition-colors text-xl flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer"
+            >
+              search
+            </button>
+          </form>
           <Link
             to="/#collections"
             onClick={(e) => handleNavClick(e, '/', 'collections')}
@@ -272,15 +309,16 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
             Contacto
           </Link>
           
-           {estaLogueado && esVendedor && (
+          {estaLogueado && (esVendedor || esAdmin || esModerador) && (
             <Link
               to="/vendedor"
               onClick={() => setMenuMovilAbierto(false)}
               className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
             >
-              Panel Vendedor
+              {esVendedor ? 'Panel Vendedor' : 'Publicar Joyas'}
             </Link>
           )}
+
           {estaLogueado && (
             <>
               <Link

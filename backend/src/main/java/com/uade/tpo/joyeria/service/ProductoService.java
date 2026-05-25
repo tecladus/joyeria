@@ -69,9 +69,9 @@ public class ProductoService {
     // Doble verificacion de rol: SecurityConfig lo bloquea a nivel HTTP y el service como segunda capa.
     public ProductoResponse crear(Long vendedorId, ProductoRequest request) {
         Usuario vendedor = usuarioService.obtenerPorId(vendedorId);
-
-        if (!vendedor.getRol().getNombre().equals("VENDEDOR")) {
-            throw new AccesoDenegadoException("Solo los vendedores pueden crear productos");
+        String rol = vendedor.getRol().getNombre();
+        if (!rol.equals("VENDEDOR") && !rol.equals("ADMIN") && !rol.equals("MODERATOR")) {
+            throw new AccesoDenegadoException("Solo los vendedores, administradores y moderadores pueden crear productos");
         }
 
         Categoria categoria = categoriaService.obtenerEntidadPorId(request.getCategoriaId());
