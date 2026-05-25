@@ -88,11 +88,11 @@ public class UsuarioService implements UserDetailsService {
         String identificador = request.getEmail();
         Usuario usuario = usuarioRepository.findByEmail(identificador)
                 .or(() -> usuarioRepository.findByUsername(identificador))
-                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales invalidas"));
+                .orElseThrow(() -> new CredencialesInvalidasException("La cuenta no existe"));
 
         // BCrypt compara el password ingresado contra el hash guardado sin desencriptarlo.
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
-            throw new CredencialesInvalidasException("Credenciales invalidas");
+            throw new CredencialesInvalidasException("Contraseña incorrecta");
         }
 
         String token = jwtService.generateToken(usuario);
