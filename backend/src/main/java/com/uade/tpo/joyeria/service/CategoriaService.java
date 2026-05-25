@@ -62,7 +62,7 @@ public class CategoriaService {
         // Verificar que no haya productos asociados
         long productosAsociados = categoriaRepository.countProductosByCategoria(id);
         if (productosAsociados > 0) {
-            throw new RecursoNoEncontradoException("No se puede eliminar la categoria: tiene " + productosAsociados + " productos asociados");
+            throw new IllegalArgumentException("No se puede eliminar la categoria: tiene " + productosAsociados + " productos asociados");
         }
         categoriaRepository.deleteById(id);
     }

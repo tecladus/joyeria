@@ -7,21 +7,17 @@
 
 * **Institución:** Universidad Argentina de la Empresa (UADE)
 * **Facultad:** Facultad de Ingeniería (FAIN)
-* **Departamento:** Departamento de Tecnología Informática Ciclo (DETIN)
-* **Materia:** Aplicaciones Interactivas (Código: `3.4.082`)
-* **Docente:** Cuello, Gisele Gabriela
-* **N° de Clase:** 6219
 
 ---
 
 ## 👥 Integrantes del Equipo
 
-| Nombre y Apellido | Legajo | Rol Principal |
+| Nombre y Apellido | Legajo |
 | :--- | :--- | :--- |
-| **FICER OCTAVIO BENJAMIN GABRIEL** | *(S/D)* | Fullstack Developer / UI Designer |
-| **KARKOSZKA IVAN** | **1149738** | Fullstack Developer / Security Engineer |
-| **LOPEZ LOPEZ BAUTISTA** | *(S/D)* | Frontend Developer / QA Tester |
-| **SONCIN ESTEBAN ARIEL** | *(S/D)* | Backend Developer / DB Administrator |
+| **FICER OCTAVIO BENJAMIN GABRIEL** | *(S/D)* |
+| **KARKOSZKA IVAN** | **1149738** |
+| **LOPEZ LOPEZ BAUTISTA** | *(S/D)* |
+| **SONCIN ESTEBAN ARIEL** | *(S/D)* |
 
 ---
 
@@ -76,44 +72,3 @@ El sistema implementa 4 roles de usuario diferenciados con su respectivo nivel d
    * Gestión interactiva del Carrito de Compras.
    * Proceso de checkout directo con actualización automática de stock físico.
    * Panel personal de "Mis Compras" para consultar el historial de órdenes y sus respectivos estados de entrega.
-
----
-
-## 🚀 Guía de Instalación y Ejecución
-
-### Requisitos Previos
-* Java Development Kit (JDK) 17 instalado.
-* Node.js (v16+) y npm instalados.
-* PostgreSQL instalado y activo en el puerto local 5432.
-
-### 1. Inicialización de la Base de Datos
-1. Inicia sesión en tu terminal o cliente de PostgreSQL.
-2. Crea una base de datos vacía llamada `joyeria_db`:
-   ```sql
-   CREATE DATABASE joyeria_db;
-   ```
-3. Ejecuta el script de siembra ubicado en la raíz del proyecto para inicializar la estructura, roles predeterminados, categorías base y productos iniciales de demostración:
-   * **Script a ejecutar:** [INSERT_USUARIOS.sql](file:///c:/desarrollo/joyeria/INSERT_USUARIOS.sql)
-   * **Credencial general de prueba:** Contraseña para todos los usuarios semilla es `password123`.
-
-### 2. Configurar y Correr el Backend
-1. Abre una terminal en el directorio `backend/`.
-2. Ejecuta las variables de entorno de base de datos o asegúrate de que coincidan en el archivo `application.properties`.
-3. Inicia la aplicación Spring Boot:
-   ```bash
-   mvn spring-boot:run
-   ```
-   *(También puedes utilizar el script conveniente en la raíz: `run-backend.bat`)*
-
-### 3. Configurar y Correr el Frontend
-1. Abre una terminal en el directorio `frontend/`.
-2. Instala las dependencias del proyecto:
-   ```bash
-   npm install
-   ```
-3. Inicia el servidor de desarrollo Vite:
-   ```bash
-   npm run dev
-   ```
-   *(También puedes utilizar el script conveniente en la raíz: `run-frontend.bat`)*
-4. Abre tu navegador en la URL indicada (habitualmente [http://localhost:5173](http://localhost:5173)).

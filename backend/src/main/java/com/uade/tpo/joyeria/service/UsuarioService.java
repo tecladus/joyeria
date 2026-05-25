@@ -54,7 +54,6 @@ public class UsuarioService implements UserDetailsService {
 
     // Registra un nuevo usuario: valida email unico, hashea password y genera token JWT.
     // El usuario puede usar la app inmediatamente sin necesidad de hacer login por separado.
-    @Transactional
     public AuthResponse registrar(RegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new EmailDuplicadoException("El email ya esta registrado: " + request.getEmail());
