@@ -101,16 +101,30 @@ public class OrdenService {
                 .collect(Collectors.toList());
     }
 
-    // Si la orden existe pero es de otro usuario, devolvemos 404 para no revelar que existe.
-    public OrdenResponse obtenerPorId(Long ordenId, Long usuarioId) {
+    // Si la orden existe pero es de otro usuario, devolvemos 404 para no revelar que existe (a menos que sea ADMIN o MODERATOR).
+    public OrdenResponse obtenerPorId(Long ordenId, Long usuarioId, String rolUsuario) {
         Orden orden = ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada: " + ordenId));
 
-        if (!orden.getUsuario().getIdUsuario().equals(usuarioId)) {
+        if (!rolUsuario.equals("ADMIN") && !rolUsuario.equals("MODERATOR") && !orden.getUsuario().getIdUsuario().equals(usuarioId)) {
             throw new RecursoNoEncontradoException("Orden no encontrada: " + ordenId);
         }
 
         return mapearAResponse(orden);
+    }
+
+    public List<OrdenResponse> listarTodas() {
+        return ordenRepository.findAll().stream()
+                .map(this::mapearAResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrdenResponse actualizarEstado(Long ordenId, String nuevoEstado) {
+        Orden orden = ordenRepository.findById(ordenId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada: " + ordenId));
+        orden.setEstado(nuevoEstado);
+        return mapearAResponse(ordenRepository.save(orden));
     }
 
     private OrdenResponse mapearAResponse(Orden orden) {

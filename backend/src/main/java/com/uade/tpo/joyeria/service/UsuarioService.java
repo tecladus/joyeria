@@ -19,6 +19,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
 // Maneja registro y login de usuarios.
@@ -137,5 +139,28 @@ public class UsuarioService implements UserDetailsService {
                 .fechaCreacion(usuario.getFechaCreacion())
                 .rol(usuario.getRol().getNombre())
                 .build();
+    }
+
+    public List<UsuarioResponse> listarTodos() {
+        return usuarioRepository.findAll().stream()
+                .map(this::mapearAUsuarioResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public UsuarioResponse cambiarRol(Long id, Long nuevoRolId) {
+        Usuario usuario = obtenerPorId(id);
+        Role rol = roleRepository.findById(nuevoRolId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado: " + nuevoRolId));
+        usuario.setRol(rol);
+        return mapearAUsuarioResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
+    public void eliminarUsuario(Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Usuario no encontrado: " + id);
+        }
+        usuarioRepository.deleteById(id);
     }
 }

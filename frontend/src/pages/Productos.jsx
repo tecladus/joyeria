@@ -287,8 +287,14 @@ function Productos({ auth, onActualizarCarrito }) {
                     <span className="absolute left-3 top-2 text-xs text-outline font-body-md">$</span>
                     <input
                       type="number"
+                      min="0"
                       value={precioMin}
-                      onChange={(e) => setPrecioMin(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || parseFloat(val) >= 0) {
+                          setPrecioMin(val);
+                        }
+                      }}
                       placeholder="Min"
                       className="w-full bg-transparent border border-outline-variant/65 rounded-sm py-2 pl-7 pr-3 font-body-md text-sm focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-outline/40 text-on-surface"
                     />
@@ -298,8 +304,14 @@ function Productos({ auth, onActualizarCarrito }) {
                     <span className="absolute left-3 top-2 text-xs text-outline font-body-md">$</span>
                     <input
                       type="number"
+                      min="0"
                       value={precioMax}
-                      onChange={(e) => setPrecioMax(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || parseFloat(val) >= 0) {
+                          setPrecioMax(val);
+                        }
+                      }}
                       placeholder="Max"
                       className="w-full bg-transparent border border-outline-variant/65 rounded-sm py-2 pl-7 pr-3 font-body-md text-sm focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-outline/40 text-on-surface"
                     />

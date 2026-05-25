@@ -54,22 +54,33 @@ public class SecurityConfig {
             // Reglas de autorizacion por rol. El orden importa: la primera regla que coincide gana.
             .authorizeHttpRequests(auth -> auth
 
-                // Registro y login son los unicos endpoints publicos, sin token.
-                .requestMatchers("/api/usuarios/**").permitAll()
+                // Registro y login son publicos.
+                .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
 
-                // Solo VENDEDOR puede escribir productos.
-                .requestMatchers(HttpMethod.POST, "/api/productos/**").hasAuthority("VENDEDOR")
-                .requestMatchers(HttpMethod.PUT, "/api/productos/**").hasAuthority("VENDEDOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").hasAuthority("VENDEDOR")
-                .requestMatchers(HttpMethod.PATCH, "/api/productos/**").hasAuthority("VENDEDOR")
+                // Endpoints administrativos de usuarios.
+                .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAnyAuthority("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.PUT, "/api/usuarios/*/rol").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/usuarios/*").hasAuthority("ADMIN")
 
-                // Categorias: GET publico sin token, escritura solo VENDEDOR.
+                // Escritura de productos: VENDEDOR o ADMIN. Eliminacion tambien por MODERATOR.
+                .requestMatchers(HttpMethod.POST, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
+
+                // Categorias: GET publico sin token, escritura VENDEDOR o ADMIN.
                 .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
-                .requestMatchers("/api/categorias/**").hasAuthority("VENDEDOR")
+                .requestMatchers("/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
 
-                // Carrito y ordenes: exclusivo para COMPRADOR.
+                // Carrito: exclusivo para COMPRADOR.
                 .requestMatchers("/api/carrito/**").hasAuthority("COMPRADOR")
-                .requestMatchers("/api/ordenes/**").hasAuthority("COMPRADOR")
+
+                // Ordenes: checkout y listar propio son para COMPRADOR, ver todas / actualizar estado para ADMIN y MODERATOR.
+                .requestMatchers(HttpMethod.POST, "/api/ordenes/checkout").hasAuthority("COMPRADOR")
+                .requestMatchers(HttpMethod.GET, "/api/ordenes").hasAuthority("COMPRADOR")
+                .requestMatchers(HttpMethod.GET, "/api/ordenes/todas").hasAnyAuthority("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.PATCH, "/api/ordenes/*/estado").hasAnyAuthority("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.GET, "/api/ordenes/*").hasAnyAuthority("COMPRADOR", "ADMIN", "MODERATOR")
 
                 // Lectura de productos: publico sin token.
                 .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()

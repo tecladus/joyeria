@@ -52,4 +52,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleStock(StockInsuficienteException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
     }
+
+    // 400 Bad Request: argumentos ilegales o de validacion generica
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
+    }
 }

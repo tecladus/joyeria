@@ -46,6 +46,15 @@ public class ProductoService {
     }
 
     public List<ProductoResponse> listarPorRangoDePrecio(java.math.BigDecimal precioMin, java.math.BigDecimal precioMax) {
+        if (precioMin != null && precioMin.compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser negativo");
+        }
+        if (precioMax != null && precioMax.compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El precio máximo no puede ser negativo");
+        }
+        if (precioMin != null && precioMax != null && precioMin.compareTo(precioMax) > 0) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor que el precio máximo");
+        }
         return productoRepository.findByPrecioBetweenAndStockGreaterThan(precioMin, precioMax, 0).stream()
                 .map(this::mapearAResponse)
                 .collect(Collectors.toList());
@@ -80,11 +89,11 @@ public class ProductoService {
         return mapearAResponse(productoRepository.save(producto));
     }
 
-    // Verifica ownership: solo el vendedor que creo el producto puede modificarlo.
-    public ProductoResponse actualizar(Long vendedorId, Long productoId, ProductoRequest request) {
+    // Verifica ownership: solo el vendedor que creo el producto puede modificarlo (o un ADMIN).
+    public ProductoResponse actualizar(Long usuarioId, String rol, Long productoId, ProductoRequest request) {
         Producto producto = obtenerEntidadPorId(productoId);
 
-        if (!producto.getVendedor().getIdUsuario().equals(vendedorId)) {
+        if (!rol.equals("ADMIN") && !producto.getVendedor().getIdUsuario().equals(usuarioId)) {
             throw new AccesoDenegadoException("Solo puedes modificar tus propios productos");
         }
 
@@ -101,20 +110,21 @@ public class ProductoService {
         return mapearAResponse(productoRepository.save(producto));
     }
 
-    public void eliminar(Long vendedorId, Long productoId) {
+    // Verifica ownership: solo el vendedor que creo el producto puede eliminarlo (o un ADMIN/MODERATOR).
+    public void eliminar(Long usuarioId, String rol, Long productoId) {
         Producto producto = obtenerEntidadPorId(productoId);
 
-        if (!producto.getVendedor().getIdUsuario().equals(vendedorId)) {
+        if (!rol.equals("ADMIN") && !rol.equals("MODERATOR") && !producto.getVendedor().getIdUsuario().equals(usuarioId)) {
             throw new AccesoDenegadoException("Solo puedes eliminar tus propios productos");
         }
 
         productoRepository.deleteById(productoId);
     }
 
-    public ProductoResponse aplicarDescuento(Long vendedorId, Long productoId, java.math.BigDecimal descuento) {
+    public ProductoResponse aplicarDescuento(Long usuarioId, String rol, Long productoId, java.math.BigDecimal descuento) {
         Producto producto = obtenerEntidadPorId(productoId);
 
-        if (!producto.getVendedor().getIdUsuario().equals(vendedorId)) {
+        if (!rol.equals("ADMIN") && !producto.getVendedor().getIdUsuario().equals(usuarioId)) {
             throw new AccesoDenegadoException("Solo puedes modificar tus propios productos");
         }
 

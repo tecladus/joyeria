@@ -36,6 +36,16 @@ public class OrdenController {
     @GetMapping("/{id}")
     public ResponseEntity<OrdenResponse> obtener(@PathVariable Long id,
                                                   @AuthenticationPrincipal Usuario usuario) {
-        return ResponseEntity.ok(ordenService.obtenerPorId(id, usuario.getIdUsuario()));
+        return ResponseEntity.ok(ordenService.obtenerPorId(id, usuario.getIdUsuario(), usuario.getRol().getNombre()));
+    }
+
+    @GetMapping("/todas")
+    public ResponseEntity<List<OrdenResponse>> listarTodas() {
+        return ResponseEntity.ok(ordenService.listarTodas());
+    }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<OrdenResponse> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
+        return ResponseEntity.ok(ordenService.actualizarEstado(id, estado));
     }
 }

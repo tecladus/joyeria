@@ -11,6 +11,8 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
   const estaLogueado = !!auth.token;
   const esVendedor = auth.rol === 'VENDEDOR';
   const esComprador = auth.rol === 'COMPRADOR';
+  const esAdmin = auth.rol === 'ADMIN';
+  const esModerador = auth.rol === 'MODERATOR';
 
   const handleCerrarSesion = () => {
     onCerrarSesion();
@@ -149,7 +151,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
                           Rol de Cuenta
                         </span>
                         <span className="font-body-md text-on-surface text-xs font-semibold block mt-0.5">
-                          {auth.rol === 'VENDEDOR' ? 'Vendedor' : 'Comprador'}
+                          {auth.rol === 'VENDEDOR' ? 'Vendedor' : auth.rol === 'ADMIN' ? 'Administrador' : auth.rol === 'MODERATOR' ? 'Moderador' : 'Comprador'}
                         </span>
                       </div>
                       
@@ -164,12 +166,41 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
                       )}
 
                       {esComprador && (
+                        <>
+                          <Link
+                            to="/carrito"
+                            onClick={() => setDropdownAbierto(false)}
+                            className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors duration-200"
+                          >
+                            Bolsa de Compras
+                          </Link>
+                          <Link
+                            to="/compras"
+                            onClick={() => setDropdownAbierto(false)}
+                            className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors duration-200"
+                          >
+                            Mis Compras
+                          </Link>
+                        </>
+                      )}
+
+                      {esAdmin && (
                         <Link
-                          to="/carrito"
+                          to="/admin"
                           onClick={() => setDropdownAbierto(false)}
                           className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors duration-200"
                         >
-                          Bolsa de Compras
+                          Panel Admin
+                        </Link>
+                      )}
+
+                      {esModerador && (
+                        <Link
+                          to="/moderador"
+                          onClick={() => setDropdownAbierto(false)}
+                          className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors duration-200"
+                        >
+                          Panel Moderador
                         </Link>
                       )}
 
@@ -243,7 +274,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
             Contacto
           </Link>
           
-          {estaLogueado && esVendedor && (
+           {estaLogueado && esVendedor && (
             <Link
               to="/vendedor"
               onClick={() => setMenuMovilAbierto(false)}
@@ -253,17 +284,44 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
             </Link>
           )}
           {estaLogueado && esComprador && (
+            <>
+              <Link
+                to="/carrito"
+                onClick={() => setMenuMovilAbierto(false)}
+                className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 flex justify-between items-center text-left"
+              >
+                <span>Bolsa de Compras</span>
+                {cantidadCarrito > 0 && (
+                  <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    {cantidadCarrito}
+                  </span>
+                )}
+              </Link>
+              <Link
+                to="/compras"
+                onClick={() => setMenuMovilAbierto(false)}
+                className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
+              >
+                Mis Compras
+              </Link>
+            </>
+          )}
+          {estaLogueado && esAdmin && (
             <Link
-              to="/carrito"
+              to="/admin"
               onClick={() => setMenuMovilAbierto(false)}
-              className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 flex justify-between items-center text-left"
+              className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
             >
-              <span>Bolsa de Compras</span>
-              {cantidadCarrito > 0 && (
-                <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                  {cantidadCarrito}
-                </span>
-              )}
+              Panel Admin
+            </Link>
+          )}
+          {estaLogueado && esModerador && (
+            <Link
+              to="/moderador"
+              onClick={() => setMenuMovilAbierto(false)}
+              className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
+            >
+              Panel Moderador
             </Link>
           )}
 

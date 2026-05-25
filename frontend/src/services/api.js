@@ -178,3 +178,62 @@ export const getOrdenes = async (usuarioId) => {
   });
   return manejarRespuesta(res);
 };
+
+// ========================
+//      ADMIN / MODERADOR
+// ========================
+
+export const getUsuarios = async () => {
+  const res = await fetch(`${BASE_URL}/usuarios`, {
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const cambiarRolUsuario = async (id, nuevoRolId) => {
+  const res = await fetch(`${BASE_URL}/usuarios/${id}/rol?nuevoRolId=${nuevoRolId}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const eliminarUsuario = async (id) => {
+  const res = await fetch(`${BASE_URL}/usuarios/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const getTodasLasOrdenes = async () => {
+  const res = await fetch(`${BASE_URL}/ordenes/todas`, {
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const actualizarEstadoOrden = async (id, estado) => {
+  const res = await fetch(`${BASE_URL}/ordenes/${id}/estado?estado=${estado}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const crearCategoria = async (datos) => {
+  const res = await fetch(`${BASE_URL}/categorias`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(datos),
+  });
+  return manejarRespuesta(res);
+};
+
+export const eliminarCategoria = async (id) => {
+  const res = await fetch(`${BASE_URL}/categorias/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};

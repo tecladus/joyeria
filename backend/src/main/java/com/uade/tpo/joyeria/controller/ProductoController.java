@@ -57,13 +57,13 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse> actualizar(@PathVariable Long id,
                                                         @AuthenticationPrincipal Usuario usuario,
                                                         @Valid @RequestBody ProductoRequest request) {
-        return ResponseEntity.ok(productoService.actualizar(usuario.getIdUsuario(), id, request));
+        return ResponseEntity.ok(productoService.actualizar(usuario.getIdUsuario(), usuario.getRol().getNombre(), id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id,
                                           @AuthenticationPrincipal Usuario usuario) {
-        productoService.eliminar(usuario.getIdUsuario(), id);
+        productoService.eliminar(usuario.getIdUsuario(), usuario.getRol().getNombre(), id);
         return ResponseEntity.noContent().build();
     }
 
@@ -71,6 +71,6 @@ public class ProductoController {
     public ResponseEntity<ProductoResponse> aplicarDescuento(@PathVariable Long id,
                                                               @AuthenticationPrincipal Usuario usuario,
                                                               @RequestParam BigDecimal descuento) {
-        return ResponseEntity.ok(productoService.aplicarDescuento(usuario.getIdUsuario(), id, descuento));
+        return ResponseEntity.ok(productoService.aplicarDescuento(usuario.getIdUsuario(), usuario.getRol().getNombre(), id, descuento));
     }
 }

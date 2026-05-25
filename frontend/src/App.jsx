@@ -11,6 +11,9 @@ import Productos from './pages/Productos';
 import DetalleProducto from './pages/DetalleProducto';
 import Carrito from './pages/Carrito';
 import PanelVendedor from './pages/PanelVendedor';
+import HistorialCompras from './pages/HistorialCompras';
+import PanelAdmin from './pages/PanelAdmin';
+import PanelModerador from './pages/PanelModerador';
 import { getCarrito } from './services/api';
 
 function App() {
@@ -82,6 +85,30 @@ function App() {
               element={
                 <RutaProtegida auth={auth} rolRequerido="VENDEDOR">
                   <PanelVendedor auth={auth} />
+                </RutaProtegida>
+              }
+            />
+            <Route
+              path="/compras"
+              element={
+                <RutaProtegida auth={auth} rolRequerido="COMPRADOR">
+                  <HistorialCompras auth={auth} />
+                </RutaProtegida>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RutaProtegida auth={auth} rolRequerido="ADMIN">
+                  <PanelAdmin auth={auth} />
+                </RutaProtegida>
+              }
+            />
+            <Route
+              path="/moderador"
+              element={
+                <RutaProtegida auth={auth} rolRequerido="MODERATOR">
+                  <PanelModerador auth={auth} />
                 </RutaProtegida>
               }
             />
