@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mvn spring-boot:run -DskipTests)"
+      "Bash(mvn spring-boot:run -DskipTests)",
+      "Bash(mvn clean *)"
     ]
   }
 }

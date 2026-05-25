@@ -47,6 +47,10 @@ public class CategoriaService {
     public CategoriaResponse actualizar(Long id, CategoriaRequest request) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoria no encontrada: " + id));
+        if (!categoria.getNombre().equals(request.getNombre()) &&
+            categoriaRepository.existsByNombre(request.getNombre())) {
+            throw new CategoriaDuplicadaException("Ya existe una categoria con ese nombre: " + request.getNombre());
+        }
         categoria.setNombre(request.getNombre());
         return mapearAResponse(categoriaRepository.save(categoria));
     }
@@ -54,6 +58,11 @@ public class CategoriaService {
     public void eliminar(Long id) {
         if (!categoriaRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Categoria no encontrada: " + id);
+        }
+        // Verificar que no haya productos asociados
+        long productosAsociados = categoriaRepository.countProductosByCategoria(id);
+        if (productosAsociados > 0) {
+            throw new RecursoNoEncontradoException("No se puede eliminar la categoria: tiene " + productosAsociados + " productos asociados");
         }
         categoriaRepository.deleteById(id);
     }
