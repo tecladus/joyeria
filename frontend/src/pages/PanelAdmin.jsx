@@ -3,7 +3,7 @@ import {
   getUsuarios, cambiarRolUsuario, eliminarUsuario,
   getTodasLasOrdenes, actualizarEstadoOrden,
   getProductos, eliminarProducto, editarProducto,
-  getCategorias, crearCategoria, eliminarCategoria
+  getCategorias, crearCategoria, eliminarCategoria, editarCategoria
 } from '../services/api';
 
 const TABS = [
@@ -38,8 +38,16 @@ function PanelAdmin({ auth }) {
 
   // Editar Producto Modal/Estado
   const [prodAEditar, setProdAEditar] = useState(null);
-  const [editStock, setEditStock] = useState('');
+  const [editNombre, setEditNombre] = useState('');
+  const [editDescripcion, setEditDescripcion] = useState('');
   const [editPrecio, setEditPrecio] = useState('');
+  const [editStock, setEditStock] = useState('');
+  const [editImagenUrl, setEditImagenUrl] = useState('');
+  const [editIdCategoria, setEditIdCategoria] = useState('');
+
+  // Editar Categoría en línea
+  const [catAEditar, setCatAEditar] = useState(null);
+  const [editCatNombre, setEditCatNombre] = useState('');
 
   const mostrarToast = (mensaje) => {
     setToast(mensaje);
@@ -107,8 +115,12 @@ function PanelAdmin({ auth }) {
 
   const abrirEdicionProducto = (prod) => {
     setProdAEditar(prod);
-    setEditStock(prod.stock);
-    setEditPrecio(prod.precio);
+    setEditNombre(prod.nombre || '');
+    setEditDescripcion(prod.descripcion || '');
+    setEditPrecio(prod.precio || '');
+    setEditStock(prod.stock || '');
+    setEditImagenUrl(prod.imagenUrl || '');
+    setEditIdCategoria(prod.idCategoria || '');
   };
 
   const handleGuardarProducto = async (e) => {
@@ -116,13 +128,13 @@ function PanelAdmin({ auth }) {
     if (!prodAEditar) return;
     try {
       const datosActualizados = {
-        nombre: prodAEditar.nombre,
-        descripcion: prodAEditar.descripcion,
+        nombre: editNombre,
+        descripcion: editDescripcion,
         precio: parseFloat(editPrecio),
         descuento: prodAEditar.descuento,
         stock: parseInt(editStock, 10),
-        imagenUrl: prodAEditar.imagenUrl,
-        categoriaId: prodAEditar.idCategoria
+        imagenUrl: editImagenUrl || null,
+        categoriaId: Number(editIdCategoria)
       };
       await editarProducto(prodAEditar.idProducto, auth.idUsuario, datosActualizados);
       mostrarToast('Producto modificado correctamente');
@@ -166,6 +178,18 @@ function PanelAdmin({ auth }) {
       cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al eliminar categoría.');
+    }
+  };
+
+  const handleGuardarCategoria = async (id) => {
+    if (!editCatNombre.trim()) return;
+    try {
+      await editarCategoria(id, { nombre: editCatNombre.trim() });
+      mostrarToast('Categoría actualizada correctamente');
+      setCatAEditar(null);
+      cargarDatos();
+    } catch (err) {
+      setError(err.message || 'Error al actualizar la categoría.');
     }
   };
 
@@ -406,7 +430,7 @@ function PanelAdmin({ auth }) {
                   </table>
                 </div>
 
-                {/* Modal de edición básico */}
+                {/* Modal de edición completo */}
                 {prodAEditar && (
                   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
                     <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6">
@@ -419,7 +443,21 @@ function PanelAdmin({ auth }) {
                       <form onSubmit={handleGuardarProducto} className="space-y-4 font-body-md text-sm">
                         <div>
                           <label className="block text-xs uppercase font-label-caps text-outline mb-1">Nombre</label>
-                          <input type="text" disabled value={prodAEditar.nombre} className="w-full bg-surface-container-low border border-outline/20 rounded p-2 text-outline/70 cursor-not-allowed" />
+                          <input 
+                            type="text" 
+                            value={editNombre} 
+                            onChange={(e) => setEditNombre(e.target.value)}
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descripción</label>
+                          <textarea 
+                            value={editDescripcion} 
+                            onChange={(e) => setEditDescripcion(e.target.value)}
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary h-20 resize-none" 
+                          />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -451,6 +489,31 @@ function PanelAdmin({ auth }) {
                               required 
                             />
                           </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Categoría</label>
+                          <select
+                            value={editIdCategoria}
+                            onChange={(e) => setEditIdCategoria(e.target.value)}
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
+                            required
+                          >
+                            <option value="" className="bg-background text-on-surface">Seleccionar Categoría</option>
+                            {categorias.map((cat) => (
+                              <option key={cat.idCategoria} value={cat.idCategoria} className="bg-background text-on-surface">
+                                {cat.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">URL de la Imagen</label>
+                          <input 
+                            type="url" 
+                            value={editImagenUrl} 
+                            onChange={(e) => setEditImagenUrl(e.target.value)}
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
+                          />
                         </div>
                         <div className="pt-4 flex gap-4">
                           <button type="button" onClick={() => setProdAEditar(null)} className="flex-1 py-2.5 border border-outline text-secondary font-label-caps text-xs uppercase hover:bg-surface-container-low transition-colors bg-transparent">
@@ -566,20 +629,63 @@ function PanelAdmin({ auth }) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant/10 font-body-md">
-                      {categorias.map((c) => (
-                        <tr key={c.idCategoria} className="hover:bg-surface-container-low/30 transition-colors">
-                          <td className="p-4 text-secondary text-xs">#{c.idCategoria}</td>
-                          <td className="p-4 font-semibold text-on-surface">{c.nombre}</td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleEliminarCategoria(c.idCategoria)}
-                              className="text-error hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer"
-                            >
-                              Eliminar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {categorias.map((c) => {
+                        const esModoEdicion = catAEditar && catAEditar.idCategoria === c.idCategoria;
+                        return (
+                          <tr key={c.idCategoria} className="hover:bg-surface-container-low/30 transition-colors">
+                            <td className="p-4 text-secondary text-xs">#{c.idCategoria}</td>
+                            <td className="p-4 font-semibold text-on-surface">
+                              {esModoEdicion ? (
+                                <input
+                                  type="text"
+                                  value={editCatNombre}
+                                  onChange={(e) => setEditCatNombre(e.target.value)}
+                                  className="bg-transparent border-0 border-b border-primary py-1 px-0 focus:ring-0 focus:border-primary text-on-surface text-sm font-semibold w-full max-w-xs"
+                                  required
+                                />
+                              ) : (
+                                c.nombre
+                              )}
+                            </td>
+                            <td className="p-4 text-right space-x-3">
+                              {esModoEdicion ? (
+                                <>
+                                  <button
+                                    onClick={() => handleGuardarCategoria(c.idCategoria)}
+                                    className="text-primary hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer"
+                                  >
+                                    Guardar
+                                  </button>
+                                  <button
+                                    onClick={() => setCatAEditar(null)}
+                                    className="text-secondary hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setCatAEditar(c);
+                                      setEditCatNombre(c.nombre);
+                                    }}
+                                    className="text-primary hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer"
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    onClick={() => handleEliminarCategoria(c.idCategoria)}
+                                    className="text-error hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer"
+                                  >
+                                    Eliminar
+                                  </button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

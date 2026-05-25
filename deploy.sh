@@ -5,9 +5,6 @@ set -e
 
 # Configuración: usar variables de entorno o valores por defecto
 # Para overrides en GitHub Actions, pasar como:
-# env:
-#   DEPLOY_PATH: /var/www/production
-#   SERVICE_NAME: joyeria-backend
 DEPLOY_PATH="${DEPLOY_PATH:-.}"
 SERVICE_NAME="${SERVICE_NAME:-joyeria-backend}"
 

@@ -237,3 +237,13 @@ export const eliminarCategoria = async (id) => {
   });
   return manejarRespuesta(res);
 };
+
+export const editarCategoria = async (id, datos) => {
+  const res = await fetch(`${BASE_URL}/categorias/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(datos),
+  });
+  return manejarRespuesta(res);
+};
+
