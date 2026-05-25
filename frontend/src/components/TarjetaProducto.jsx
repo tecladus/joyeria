@@ -37,7 +37,7 @@ function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
             alt={producto.nombre}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             onError={(e) => {
-              e.style.display = 'none';
+              e.target.style.display = 'none';
             }}
           />
         )}

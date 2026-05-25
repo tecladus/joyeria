@@ -49,11 +49,13 @@ class DeviceDetector {
 
   // Detecta resolución de pantalla
   detectResolution() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     return {
-      width: window.screen.width,
-      height: window.screen.height,
+      width: width,
+      height: height,
       pixelRatio: window.devicePixelRatio || 1,
-      total: window.screen.width * window.screen.height,
+      total: width * height,
     };
   }
 
@@ -138,6 +140,11 @@ class DeviceDetector {
     if (conn.effectiveType === '4g') score += 10;
     else if (conn.effectiveType === '3g') score += 5;
     else if (conn.effectiveType === 'slow-2g') score -= 5;
+
+    // Si el ancho del viewport corresponde a móvil, capar la puntuación en un máximo de 40 para clasificar como móvil
+    if (window.innerWidth < 768) {
+      score = Math.min(score, 40);
+    }
 
     return score;
   }

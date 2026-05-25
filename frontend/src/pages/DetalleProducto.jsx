@@ -132,12 +132,7 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
     };
   })();
 
-  const imagenesSecundarias = producto ? [
-    producto.imagenUrl,
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuADKa9h_aHbjagV89hae4PYWA6Xq6zFvrBuyi4PC64wp7nX-Sha9aGU22cwSpUFB7j98bc5Uhhx2bF0WR40siw-v2UfYCLdQ52KDp_FkkSZfAtX87pMpKa9v3_8cMcNeM2s90DzGIqQm3ujzZwfuElev4VmPhnhcbZsfvLIjdd0d20Bq_Vjw2BkH_wWyHw_XZIohYnhnrPBM7RKEYqLvcgrIU-PoLBJ53MnCqcjDnZhwLIU4juE6mjkcSyziunqdPDeTakygWvmATE',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCXqU8StEwhr6lJQWX09Rf7_PQ1NtVtg7Jh9qmS8susA5iaNIZsiIvoCwyMs8xvnvcGKYih7xun_aIAOZJbJCJQy-zWNrLoTItnxx4OnxbEIcvZW3vfNgbpNI9_fFEBOTWBXlSnEZ9P7KflI87OlHuZChH0k7unwRDUoeUeiVp_G2wRCF_rw2xVLQHfWj4hQriUdmpr6DzRfP5npWi2_EoQdgFQ4Q7f60QjOMaW6d4rLcEVYadt0L2yP7AJ-nvU8HNuxMBURZtgvhs',
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCswhrQ7l7L2JtTVL9BoIJ5E-W8sTX4X1K2dGExCM4bCC3jlJqMcL9ndxLdeh48kLgnT4zM9iHyAKbsT54GU9lXf_VBPz9c6SBfWogVMTCdRCM2DEYo8p7uc-hwYJOh-6L27PZ1MlgjNjaprc8zLWEQOjmThqJm4gvBR8B1gfI2olOgSopU__fBpT39r67y1Z83_sUjR5XpENMiif8ujJWzoAWNmvRu6EKRbn1MCF5XBJXRqCzIviim7YtbRqygwazthEhQtMYvrtE'
-  ].filter(Boolean) : [];
+  const imagenesSecundarias = producto ? [producto.imagenUrl].filter(Boolean) : [];
 
   if (cargando) {
     return (

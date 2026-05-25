@@ -63,17 +63,17 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/usuarios/*").hasAuthority("ADMIN")
 
                 // Escritura de productos: VENDEDOR o ADMIN. Eliminacion tambien por MODERATOR.
-                .requestMatchers(HttpMethod.POST, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.POST, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/productos", "/api/productos/**").hasAnyAuthority("VENDEDOR", "ADMIN", "MODERATOR")
 
                 // Categorias: GET publico sin token, escritura VENDEDOR o ADMIN.
-                .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
-                .requestMatchers("/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
+                .requestMatchers("/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
 
                 // Carrito: exclusivo para COMPRADOR.
-                .requestMatchers("/api/carrito/**").hasAuthority("COMPRADOR")
+                .requestMatchers("/api/carrito", "/api/carrito/**").hasAuthority("COMPRADOR")
 
                 // Ordenes: checkout y listar propio son para COMPRADOR, ver todas / actualizar estado para ADMIN y MODERATOR.
                 .requestMatchers(HttpMethod.POST, "/api/ordenes/checkout").hasAuthority("COMPRADOR")

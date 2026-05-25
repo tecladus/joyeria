@@ -69,6 +69,11 @@ public class Usuario implements UserDetails {
         return email;
     }
 
+    // Retorna el nombre de usuario real (campo username) sin el conflicto de getUsername()
+    public String getNombreUsuario() {
+        return this.username;
+    }
+
     @Override
     public boolean isAccountNonExpired() { return true; }
 

@@ -309,18 +309,23 @@ function PanelAdmin({ auth }) {
                           </span>
                         </td>
                         <td className="p-4">
-                          <select
-                            value={ROLES.find(r => r.label === u.rol)?.id || 1}
-                            onChange={(e) => handleCambiarRol(u.idUsuario, Number(e.target.value))}
-                            disabled={auth.idUsuario === String(u.idUsuario)} // no auto-cambiarse el rol
-                            className="bg-transparent border border-outline-variant/50 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary text-on-surface cursor-pointer"
-                          >
-                            {ROLES.map((rol) => (
-                              <option key={rol.id} value={rol.id} className="bg-background text-on-surface">
-                                {rol.label}
-                              </option>
-                            ))}
-                          </select>
+                          {u.rol === 'ADMIN' ? (
+                            <span className="px-2 py-1 rounded text-xs font-semibold bg-primary/10 text-primary border border-primary/20 uppercase font-semibold">
+                              ADMIN
+                            </span>
+                          ) : (
+                            <select
+                              value={ROLES.find(r => r.label === u.rol)?.id || 1}
+                              onChange={(e) => handleCambiarRol(u.idUsuario, Number(e.target.value))}
+                              className="bg-transparent border border-outline-variant/50 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-primary focus:border-primary text-on-surface cursor-pointer"
+                            >
+                              {ROLES.filter((rol) => rol.id !== 3).map((rol) => (
+                                <option key={rol.id} value={rol.id} className="bg-background text-on-surface">
+                                  {rol.label}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </td>
                         <td className="p-4 text-right">
                           <button

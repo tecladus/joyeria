@@ -120,7 +120,7 @@ public class UsuarioService implements UserDetailsService {
                 .idUsuario(usuario.getIdUsuario())
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
-                .username(usuario.getUsername())
+                .username(usuario.getNombreUsuario())
                 .email(usuario.getEmail())
                 .rol(usuario.getRol().getNombre())
                 .build();
@@ -132,7 +132,7 @@ public class UsuarioService implements UserDetailsService {
                 .idUsuario(usuario.getIdUsuario())
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
-                .username(usuario.getUsername())
+                .username(usuario.getNombreUsuario())
                 .email(usuario.getEmail())
                 .direccion(usuario.getDireccion())
                 .telefono(usuario.getTelefono())
@@ -150,6 +150,12 @@ public class UsuarioService implements UserDetailsService {
     @Transactional
     public UsuarioResponse cambiarRol(Long id, Long nuevoRolId) {
         Usuario usuario = obtenerPorId(id);
+        if (usuario.getRol().getIdRol() == 3) {
+            throw new IllegalArgumentException("No se puede cambiar el rol del Administrador del sistema.");
+        }
+        if (nuevoRolId == 3) {
+            throw new IllegalArgumentException("No se puede asignar el rol de Administrador a otros usuarios.");
+        }
         Role rol = roleRepository.findById(nuevoRolId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado: " + nuevoRolId));
         usuario.setRol(rol);
