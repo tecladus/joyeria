@@ -58,4 +58,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
     }
+
+    // 409 Conflict: restricción de integridad de base de datos (por ejemplo, borrar categoría con productos)
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "No se puede realizar esta acción porque el recurso está asociado a otros elementos (por ejemplo, la categoría posee productos activos)."));
+    }
 }

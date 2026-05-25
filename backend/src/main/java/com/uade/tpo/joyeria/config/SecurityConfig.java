@@ -53,6 +53,8 @@ public class SecurityConfig {
 
             // Reglas de autorizacion por rol. El orden importa: la primera regla que coincide gana.
             .authorizeHttpRequests(auth -> auth
+                // Permitir todas las solicitudes OPTIONS (CORS preflight) sin autenticación.
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Registro y login son publicos.
                 .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
@@ -70,7 +72,9 @@ public class SecurityConfig {
 
                 // Categorias: GET publico sin token, escritura VENDEDOR o ADMIN.
                 .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
-                .requestMatchers("/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
 
                 // Carrito: permitido para cualquier usuario autenticado.
                 .requestMatchers("/api/carrito", "/api/carrito/**").authenticated()
