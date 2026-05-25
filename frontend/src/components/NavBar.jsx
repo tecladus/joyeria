@@ -165,7 +165,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
                         </Link>
                       )}
 
-                      {esComprador && (
+                      {estaLogueado && (
                         <>
                           <Link
                             to="/carrito"
@@ -217,20 +217,18 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
             </div>
           </div>
 
-          {/* Icono de bolsa de compras directo (compradores / invitados) */}
-          {(!estaLogueado || esComprador) && (
-            <Link
-              to="/carrito"
-              className="relative material-symbols-outlined text-on-surface hover:text-primary transition-colors duration-300 text-2xl"
-            >
-              shopping_bag
-              {cantidadCarrito > 0 && (
-                <span className="absolute -top-1 -right-2 bg-on-surface text-background text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold font-label-caps">
-                  {cantidadCarrito}
-                </span>
-              )}
-            </Link>
-          )}
+          {/* Icono de bolsa de compras directo */}
+          <Link
+            to="/carrito"
+            className="relative material-symbols-outlined text-on-surface hover:text-primary transition-colors duration-300 text-2xl"
+          >
+            shopping_bag
+            {cantidadCarrito > 0 && (
+              <span className="absolute -top-1 -right-2 bg-on-surface text-background text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold font-label-caps">
+                {cantidadCarrito}
+              </span>
+            )}
+          </Link>
 
           {/* Botón de Menú Móvil */}
           <button
@@ -283,7 +281,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
               Panel Vendedor
             </Link>
           )}
-          {estaLogueado && esComprador && (
+          {estaLogueado && (
             <>
               <Link
                 to="/carrito"

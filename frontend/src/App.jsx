@@ -27,9 +27,9 @@ function App() {
   // Contador de items en el carrito para el badge del NavBar
   const [cantidadCarrito, setCantidadCarrito] = useState(0);
 
-  // Al montar y cuando cambia el auth, carga la cantidad del carrito si es COMPRADOR
+  // Al montar y cuando cambia el auth, carga la cantidad del carrito si está autenticado
   useEffect(() => {
-    if (auth.token && auth.rol === 'COMPRADOR' && auth.idUsuario) {
+    if (auth.token && auth.idUsuario) {
       getCarrito(auth.idUsuario)
         .then((carrito) => {
           const total = carrito?.items?.reduce((sum, item) => sum + item.cantidad, 0) || 0;
@@ -39,7 +39,7 @@ function App() {
     } else {
       setCantidadCarrito(0);
     }
-  }, [auth.token, auth.idUsuario, auth.rol]);
+  }, [auth.token, auth.idUsuario]);
 
   const iniciarSesion = (datos) => {
     localStorage.setItem('token', datos.token);
@@ -91,7 +91,7 @@ function App() {
             <Route
               path="/compras"
               element={
-                <RutaProtegida auth={auth} rolRequerido="COMPRADOR">
+                <RutaProtegida auth={auth}>
                   <HistorialCompras auth={auth} />
                 </RutaProtegida>
               }

@@ -14,7 +14,7 @@ const precioConDescuento = (precio, descuento) => {
 function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
   const navigate = useNavigate();
   const deviceMultiplier = useDeviceMultiplier();
-  const puedeAgregarAlCarrito = auth?.rol === 'COMPRADOR' && auth?.token;
+  const puedeAgregarAlCarrito = !!auth?.token;
   const sinStock = !producto.stock || producto.stock <= 0;
 
   // Calcular precio con descuento primero, luego ajustar por dispositivo

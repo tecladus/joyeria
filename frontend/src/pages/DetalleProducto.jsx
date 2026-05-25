@@ -325,11 +325,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                     </div>
                   )}
 
-                  {auth?.rol === 'VENDEDOR' ? (
-                    <div className="bg-surface-container text-secondary p-4 rounded text-center text-xs font-body-md">
-                      Los vendedores no pueden realizar compras.
-                    </div>
-                  ) : (
                     <div className="flex gap-4">
                       {/* Add to Bag Button */}
                       <button
@@ -355,7 +350,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                         </span>
                       </button>
                     </div>
-                  )}
                 </div>
 
                 {/* Envíos y Soporte microinfo */}

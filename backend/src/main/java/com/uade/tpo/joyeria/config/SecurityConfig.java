@@ -72,15 +72,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
                 .requestMatchers("/api/categorias", "/api/categorias/**").hasAnyAuthority("VENDEDOR", "ADMIN")
 
-                // Carrito: exclusivo para COMPRADOR.
-                .requestMatchers("/api/carrito", "/api/carrito/**").hasAuthority("COMPRADOR")
+                // Carrito: permitido para cualquier usuario autenticado.
+                .requestMatchers("/api/carrito", "/api/carrito/**").authenticated()
 
-                // Ordenes: checkout y listar propio son para COMPRADOR, ver todas / actualizar estado para ADMIN y MODERATOR.
-                .requestMatchers(HttpMethod.POST, "/api/ordenes/checkout").hasAuthority("COMPRADOR")
-                .requestMatchers(HttpMethod.GET, "/api/ordenes").hasAuthority("COMPRADOR")
+                // Ordenes: checkout y listar propio son para cualquier usuario autenticado, ver todas / actualizar estado para ADMIN y MODERATOR.
+                .requestMatchers(HttpMethod.POST, "/api/ordenes/checkout").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/ordenes").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/ordenes/todas").hasAnyAuthority("ADMIN", "MODERATOR")
                 .requestMatchers(HttpMethod.PATCH, "/api/ordenes/*/estado").hasAnyAuthority("ADMIN", "MODERATOR")
-                .requestMatchers(HttpMethod.GET, "/api/ordenes/*").hasAnyAuthority("COMPRADOR", "ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.GET, "/api/ordenes/*").authenticated()
 
                 // Lectura de productos: publico sin token.
                 .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
