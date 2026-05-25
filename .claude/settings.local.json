@@ -1,11 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mvn spring-boot:run -DskipTests)",
-      "Bash(mkdir -p backend/src/test/java/com/uade/tpo/joyeria/config)"
-    ],
-    "additionalDirectories": [
-      "C:\\desarrollo\\joyeria\\backend\\src\\test\\java\\com\\uade\\tpo\\joyeria"
+      "Bash(mvn spring-boot:run -DskipTests)"
     ]
   }
 }

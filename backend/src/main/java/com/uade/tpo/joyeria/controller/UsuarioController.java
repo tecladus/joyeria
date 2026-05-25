@@ -5,12 +5,9 @@ import com.uade.tpo.joyeria.dto.LoginRequest;
 import com.uade.tpo.joyeria.dto.RegistroRequest;
 import com.uade.tpo.joyeria.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 // Unicos endpoints publicos del sistema: el cliente obtiene su token JWT aqui.
 @RestController
@@ -18,11 +15,9 @@ import java.util.Map;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioController(UsuarioService usuarioService, PasswordEncoder passwordEncoder) {
+    public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/registro")
@@ -33,20 +28,5 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(usuarioService.login(request));
-    }
-
-    // Endpoint temporal para generar hashes BCrypt de contraseñas (solo desarrollo)
-    @PostMapping("/debug/hash")
-    public ResponseEntity<Map<String, String>> generarHash(@RequestBody Map<String, String> request) {
-        String password = request.get("password");
-        if (password == null || password.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Password requerido"));
-        }
-        String hash = passwordEncoder.encode(password);
-        return ResponseEntity.ok(Map.of(
-            "password", password,
-            "hash", hash,
-            "verificacion", String.valueOf(passwordEncoder.matches(password, hash))
-        ));
     }
 }
