@@ -50,30 +50,35 @@ public class CarritoService {
     public CarritoResponse agregarItem(Long usuarioId, ItemCarritoRequest request) {
         Usuario usuario = usuarioService.obtenerPorId(usuarioId);
         Producto producto = productoService.obtenerEntidadPorId(request.getProductoId());
-
-        if (producto.getStock() < request.getCantidad()) {
-            throw new StockInsuficienteException(
-                    "Stock insuficiente para " + producto.getNombre() +
-                    ". Disponible: " + producto.getStock());
-        }
-
         Carrito carrito = obtenerOCrearCarritoActivo(usuario);
 
-        ItemCarrito item = itemCarritoRepository
+        // Buscar si ya existe el producto en el carrito
+        ItemCarrito itemExistente = itemCarritoRepository
                 .findByCarritoAndProducto(carrito, producto)
-                .map(existente -> {
-                    existente.setCantidad(existente.getCantidad() + request.getCantidad());
-                    return existente;
-                })
-                .orElseGet(() -> {
-                    ItemCarrito nuevo = new ItemCarrito();
-                    nuevo.setCarrito(carrito);
-                    nuevo.setProducto(producto);
-                    nuevo.setCantidad(request.getCantidad());
-                    return nuevo;
-                });
+                .orElse(null);
 
-        itemCarritoRepository.save(item);
+        int nuevaCantidad = request.getCantidad();
+        if (itemExistente != null) {
+            nuevaCantidad += itemExistente.getCantidad();
+        }
+
+        if (producto.getStock() < nuevaCantidad) {
+            throw new StockInsuficienteException(
+                    "Stock insuficiente para " + producto.getNombre() +
+                    ". Disponible: " + producto.getStock() + 
+                    (itemExistente != null ? " (Ya tienes " + itemExistente.getCantidad() + " en el carrito)" : ""));
+        }
+
+        if (itemExistente != null) {
+            itemExistente.setCantidad(nuevaCantidad);
+            itemCarritoRepository.save(itemExistente);
+        } else {
+            ItemCarrito nuevo = new ItemCarrito();
+            nuevo.setCarrito(carrito);
+            nuevo.setProducto(producto);
+            nuevo.setCantidad(nuevaCantidad);
+            itemCarritoRepository.save(nuevo);
+        }
 
         return mapearAResponse(carritoRepository.findById(carrito.getIdCarrito()).orElseThrow());
     }

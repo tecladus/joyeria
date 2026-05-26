@@ -62,23 +62,29 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
       .catch(() => {});
   }, [id]);
 
-  const handleAgregarCarrito = async () => {
+  const handleAgregarCarrito = async (productoIdInput) => {
     if (!auth?.token || !auth?.idUsuario) {
       navigate('/login');
       return;
     }
 
-    // Si es anillo, requerimos seleccionar talla
-    const esAnillo = producto?.categoria === 'Anillos' || CATEGORY_TRANSLATIONS[producto?.categoria] === 'Rings';
-    if (esAnillo && !tallaSeleccionada) {
-      setError('Por favor, selecciona una talla antes de añadir a la bolsa.');
-      return;
+    const esRecomendado = !!productoIdInput;
+    const targetProductoId = esRecomendado ? productoIdInput : producto?.idProducto;
+
+    if (!esRecomendado) {
+      // Si es anillo principal, requerimos seleccionar talla
+      const catNombre = (producto?.categoria || '').trim().toLowerCase();
+      const esAnilloPrincipal = catNombre === 'anillos' || catNombre === 'rings';
+      if (esAnilloPrincipal && !tallaSeleccionada) {
+        setError('Por favor, selecciona una talla antes de añadir a la bolsa.');
+        return;
+      }
     }
 
     setAgregando(true);
     setError('');
     try {
-      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, producto.idProducto, 1);
+      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, targetProductoId, 1);
       const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
       onActualizarCarrito(nuevoTotal);
       setMensajeExito('Producto agregado al carrito con éxito');
@@ -96,7 +102,8 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
   const precioFinal = producto ? adjustPriceByDevice(precioBase) : null;
   const precioOriginalAjustado = producto ? adjustPriceByDevice(producto.precio) : null;
   const categoriaIngles = producto?.categoria ? (CATEGORY_TRANSLATIONS[producto.categoria] || producto.categoria) : '';
-  const esAnillo = producto?.categoria === 'Anillos' || categoriaIngles === 'Rings';
+  const catNombre = (producto?.categoria || '').trim().toLowerCase();
+  const esAnillo = catNombre === 'anillos' || catNombre === 'rings';
 
   // Metadatos dinámicos premium para el detalle
   const especificaciones = (() => {

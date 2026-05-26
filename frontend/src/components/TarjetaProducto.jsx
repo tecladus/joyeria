@@ -65,13 +65,18 @@ function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
           )}
         </div>
 
-        {/* Botón de añadir a la bolsa en hover (Solo para compradores o invitados que puedan loguearse) */}
         <button
           disabled={sinStock || (auth?.token && !puedeAgregarAlCarrito)}
           onClick={(e) => {
             e.stopPropagation();
             if (!auth?.token) {
               navigate('/login');
+              return;
+            }
+            const cat = (producto.categoria || '').trim().toLowerCase();
+            const esAnillo = cat === 'anillos' || cat === 'rings';
+            if (esAnillo) {
+              navigate(`/productos/${producto.idProducto}`);
               return;
             }
             onAgregarCarrito && onAgregarCarrito(producto.idProducto);
