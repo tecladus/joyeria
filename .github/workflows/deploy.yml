@@ -3,18 +3,24 @@ name: Deploy a Producción
 on:
   push:
     branches:
-      - main  # O el nombre de tu rama principal (ej: master)
+      - main
 
 jobs:
   deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Limpiar cache del runner (self-hosted)
-        run: rm -rf ${{ runner.workspace }}/../_actions/ || true
-        
-      - name: Checkout de Código
-        uses: actions/checkout@v4
+      - name: Checkout manual (bypass de actions/checkout)
+        run: |
+          # Limpiar workspace previo
+          shopt -s dotglob nullglob
+          rm -rf ./*
+          shopt -u dotglob
+
+          # Clonar el repo en el workspace actual
+          git clone --depth 1 --branch "${GITHUB_REF_NAME}" \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" \
+            .
 
       - name: Sincronizar Código a Carpeta de Producción
         run: |
