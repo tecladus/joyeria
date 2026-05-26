@@ -14,7 +14,7 @@
 
 | Nombre y Apellido | Legajo |
 | :--- | :--- |
-| **FICER OCTAVIO BENJAMIN GABRIEL** | *(S/D)* |
+| **FICER OCTAVIO BENJAMIN GABRIEL** | *1169301* |
 | **KARKOSZKA IVAN** | **1149738** |
 | **LOPEZ LOPEZ BAUTISTA** | *(S/D)* |
 | **SONCIN ESTEBAN ARIEL** | *(S/D)* |
