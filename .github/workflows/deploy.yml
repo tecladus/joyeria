@@ -13,6 +13,10 @@ jobs:
       - name: Checkout de Código
         uses: actions/checkout@v4
 
+      - name: Clean workspace
+        run: |
+          rm -rf "${{ github.workspace }}/.cache" || true
+
       - name: Sincronizar Código a Carpeta de Producción
         run: |
           mkdir -p /var/www/temp_facu
