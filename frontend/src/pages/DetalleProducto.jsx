@@ -68,7 +68,7 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
       return;
     }
 
-    const esRecomendado = !!productoIdInput;
+    const esRecomendado = typeof productoIdInput === 'number' || typeof productoIdInput === 'string';
     const targetProductoId = esRecomendado ? productoIdInput : producto?.idProducto;
 
     if (!esRecomendado) {
