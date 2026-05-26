@@ -159,7 +159,7 @@ public class UsuarioService implements UserDetailsService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado: " + nuevoRolId));
         usuario.setRol(rol);
         return mapearAUsuarioResponse(usuarioRepository.save(usuario));
-    }
+    } 
 
     @Transactional
     public void eliminarUsuario(Long id) {
