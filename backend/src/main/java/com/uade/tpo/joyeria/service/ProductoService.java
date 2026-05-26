@@ -151,6 +151,7 @@ public class ProductoService {
                 .idCategoria(producto.getCategoria().getIdCategoria())
                 .categoria(producto.getCategoria().getNombre())
                 .vendedor(producto.getVendedor().getNombre())
+                .idVendedor(producto.getVendedor().getIdUsuario())
                 .build();
     }
 }

@@ -40,18 +40,19 @@ function PanelVendedor({ auth }) {
     getCategorias().then(setCategorias).catch(() => {});
   }, []);
 
-  // Carga todos los productos
+  // Carga los productos creados por este usuario
   const cargarProductos = useCallback(async () => {
     setCargando(true);
     try {
       const todos = await getProductos();
-      setProductos(todos || []);
+      const creadosPorMi = todos ? todos.filter(p => Number(p.idVendedor) === Number(auth.idUsuario)) : [];
+      setProductos(creadosPorMi);
     } catch {
       setProductos([]);
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [auth.idUsuario]);
 
   useEffect(() => {
     cargarProductos();

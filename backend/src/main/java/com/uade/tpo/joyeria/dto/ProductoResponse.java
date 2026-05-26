@@ -20,4 +20,5 @@ public class ProductoResponse {
     private Long idCategoria;
     private String categoria;
     private String vendedor;
+    private Long idVendedor;
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 
@@ -13,6 +14,7 @@ const precioConDescuento = (precio, descuento) => {
 
 function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
   const navigate = useNavigate();
+  const [errorImagen, setErrorImagen] = useState(false);
   const deviceMultiplier = useDeviceMultiplier();
   const puedeAgregarAlCarrito = !!auth?.token;
   const sinStock = !producto.stock || producto.stock <= 0;
@@ -31,22 +33,23 @@ function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
     >
       {/* Contenedor de la Imagen */}
       <div className="relative overflow-hidden aspect-[4/5] bg-gradient-to-br from-surface-container via-surface-container-low to-surface-container border border-outline-variant/10 transition-all duration-700 ease-in-out">
-        {producto.imagenUrl && (
+        {producto.imagenUrl && !errorImagen ? (
           <img
             src={producto.imagenUrl}
             alt={producto.nombre}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={(e) => {
-              e.target.style.display = 'none';
+            onError={() => {
+              setErrorImagen(true);
             }}
           />
+        ) : (
+          <div
+            className="absolute inset-0 w-full h-full bg-surface-container flex items-center justify-center text-5xl text-outline-variant/20 font-light"
+            id={`fallback-${producto.idProducto}`}
+          >
+            ◇
+          </div>
         )}
-        <div
-          className="absolute inset-0 w-full h-full bg-surface-container flex items-center justify-center text-5xl text-outline-variant/20 font-light"
-          id={`fallback-${producto.idProducto}`}
-        >
-          ◇
-        </div>
 
         {/* Badges superiores */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
