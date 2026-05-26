@@ -10,6 +10,9 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Limpiar cache del runner (self-hosted)
+        run: rm -rf ${{ runner.workspace }}/../_actions/ || true
+        
       - name: Checkout de Código
         uses: actions/checkout@v4
 
