@@ -18,7 +18,7 @@
 | **KARKOSZKA IVAN** | **1149738** |
 | **LOPEZ LOPEZ BAUTISTA** | *(S/D)* |
 | **SONCIN ESTEBAN ARIEL** | *(S/D)* |
-| **MONES RUIZ IGNACIO ** | 1201656 |
+| **MONES RUIZ IGNACIO** | *1201656* |
 ---
 
 ## 💎 Descripción del Proyecto
