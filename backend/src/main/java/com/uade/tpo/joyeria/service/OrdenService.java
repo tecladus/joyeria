@@ -123,6 +123,28 @@ public class OrdenService {
     public OrdenResponse actualizarEstado(Long ordenId, String nuevoEstado) {
         Orden orden = ordenRepository.findById(ordenId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada: " + ordenId));
+        
+        String oldEstado = orden.getEstado();
+        
+        if (!"CANCELADO".equals(oldEstado) && "CANCELADO".equals(nuevoEstado)) {
+            for (DetalleOrden detalle : orden.getDetalles()) {
+                Producto prod = detalle.getProducto();
+                prod.setStock(prod.getStock() + detalle.getCantidad());
+                productoRepository.save(prod);
+            }
+        } else if ("CANCELADO".equals(oldEstado) && !"CANCELADO".equals(nuevoEstado)) {
+            for (DetalleOrden detalle : orden.getDetalles()) {
+                Producto prod = detalle.getProducto();
+                if (prod.getStock() < detalle.getCantidad()) {
+                    throw new StockInsuficienteException(
+                            "No se puede reactivar la orden. Stock insuficiente para: " + prod.getNombre() +
+                            ". Disponible: " + prod.getStock() + ", requerido: " + detalle.getCantidad());
+                }
+                prod.setStock(prod.getStock() - detalle.getCantidad());
+                productoRepository.save(prod);
+            }
+        }
+
         orden.setEstado(nuevoEstado);
         return mapearAResponse(ordenRepository.save(orden));
     }

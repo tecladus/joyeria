@@ -21,6 +21,7 @@ public class CarritoResponse {
         private Long idItem;
         private Long idProducto;
         private String nombreProducto;
+        private String imagenUrl;
         private BigDecimal precioUnitario;
         private Integer cantidad;
         private BigDecimal subtotal;

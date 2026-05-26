@@ -4,14 +4,24 @@ const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
 
 function CarritoItem({ item, onCambiarCantidad, onEliminar, cargando }) {
+  const [errorImagen, setErrorImagen] = useState(false);
+
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 py-6 border-b border-outline-variant/10 text-on-surface">
       {/* Izquierda: Imagen y Detalle */}
       <div className="flex items-center gap-4 flex-grow">
-        {/* Placeholder de Imagen de Joya */}
-        <div className="w-20 h-24 bg-surface-container-low border border-outline-variant/10 flex items-center justify-center text-xl text-outline-variant rounded select-none">
-          ◇
-        </div>
+        {item.imagenUrl && !errorImagen ? (
+          <img
+            src={item.imagenUrl}
+            alt={item.nombreProducto}
+            className="w-20 h-24 object-cover border border-outline-variant/10 rounded"
+            onError={() => setErrorImagen(true)}
+          />
+        ) : (
+          <div className="w-20 h-24 bg-surface-container-low border border-outline-variant/10 flex items-center justify-center text-xl text-outline-variant rounded select-none">
+            ◇
+          </div>
+        )}
         
         <div className="space-y-1">
           <h4 className="font-body-md font-medium text-on-surface text-base">

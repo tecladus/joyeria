@@ -142,6 +142,7 @@ public class CarritoService {
                             .idItem(item.getIdItem())
                             .idProducto(item.getProducto().getIdProducto())
                             .nombreProducto(item.getProducto().getNombre())
+                            .imagenUrl(item.getProducto().getImagenUrl())
                             .precioUnitario(precioUnitario)
                             .cantidad(item.getCantidad())
                             .subtotal(subtotal)
