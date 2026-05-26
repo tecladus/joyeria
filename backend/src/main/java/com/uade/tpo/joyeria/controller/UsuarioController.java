@@ -8,7 +8,9 @@ import com.uade.tpo.joyeria.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.uade.tpo.joyeria.entity.Usuario;
 
 import java.util.List;
 
@@ -31,6 +33,11 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(usuarioService.login(request));
+    }
+
+    @PutMapping("/ser-vendedor")
+    public ResponseEntity<AuthResponse> convertirseEnVendedor(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioService.convertirseEnVendedor(usuario.getIdUsuario()));
     }
 
     @GetMapping

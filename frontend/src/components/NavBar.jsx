@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { convertirseEnVendedor } from '../services/api';
 
-function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
+function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
@@ -19,6 +20,19 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
     setMenuMovilAbierto(false);
     setDropdownAbierto(false);
     navigate('/login');
+  };
+
+  const handleConvertirseEnVendedor = async () => {
+    if (!window.confirm('¿Desea convertir su cuenta en una cuenta de Vendedor para publicar y gestionar sus propias joyas?')) return;
+    try {
+      const datos = await convertirseEnVendedor();
+      onActualizarAuth(datos);
+      setDropdownAbierto(false);
+      setMenuMovilAbierto(false);
+      navigate('/vendedor');
+    } catch (err) {
+      alert(err.message || 'Error al convertir la cuenta.');
+    }
   };
 
   const linkActivo = (path) => location.pathname === path;
@@ -168,6 +182,16 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
                           {auth.rol === 'VENDEDOR' ? 'Vendedor' : auth.rol === 'ADMIN' ? 'Administrador' : auth.rol === 'MODERATOR' ? 'Moderador' : 'Comprador'}
                         </span>
                       </div>
+
+                      {esComprador && (
+                        <button
+                          onClick={handleConvertirseEnVendedor}
+                          className="font-label-caps text-label-caps text-left px-4 py-2.5 text-xs text-primary hover:bg-primary/5 transition-colors duration-200 cursor-pointer w-full bg-transparent border-0 flex items-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-sm">storefront</span>
+                          Ser Vendedor
+                        </button>
+                      )}
                       
                       {(esVendedor || esAdmin || esModerador) && (
                         <Link
@@ -317,6 +341,16 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito }) {
             >
               {esVendedor ? 'Panel Vendedor' : 'Publicar Joyas'}
             </Link>
+          )}
+
+          {estaLogueado && esComprador && (
+            <button
+              onClick={handleConvertirseEnVendedor}
+              className="font-label-caps text-label-caps text-primary py-2 border-b border-outline-variant/5 text-left bg-transparent border-0 cursor-pointer flex items-center gap-1.5 w-full"
+            >
+              <span className="material-symbols-outlined text-sm">storefront</span>
+              Ser Vendedor
+            </button>
           )}
 
           {estaLogueado && (

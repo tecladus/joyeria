@@ -247,3 +247,12 @@ export const editarCategoria = async (id, datos) => {
   return manejarRespuesta(res);
 };
 
+export const convertirseEnVendedor = async () => {
+  const res = await fetch(`${BASE_URL}/usuarios/ser-vendedor`, {
+    method: 'PUT',
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+

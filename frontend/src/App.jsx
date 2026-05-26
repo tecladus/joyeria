@@ -63,13 +63,13 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen bg-background">
-        <NavBar auth={auth} onCerrarSesion={cerrarSesion} cantidadCarrito={cantidadCarrito} />
+        <NavBar auth={auth} onCerrarSesion={cerrarSesion} cantidadCarrito={cantidadCarrito} onActualizarAuth={iniciarSesion} />
         <div className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login onIniciarSesion={iniciarSesion} />} />
-            <Route path="/registro" element={<Registro />} />
+            <Route path="/registro" element={<Registro onIniciarSesion={iniciarSesion} />} />
             <Route path="/productos" element={<Productos auth={auth} onActualizarCarrito={actualizarCarrito} />} />
             <Route path="/productos/:id" element={<DetalleProducto auth={auth} onActualizarCarrito={actualizarCarrito} />} />
             <Route

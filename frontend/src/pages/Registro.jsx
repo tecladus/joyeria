@@ -13,7 +13,7 @@ const FORM_INICIAL = {
   rolId: 1, // 1=COMPRADOR por defecto
 };
 
-function Registro() {
+function Registro({ onIniciarSesion }) {
   const navigate = useNavigate();
   const [form, setForm] = useState(FORM_INICIAL);
   const [error, setError] = useState('');
@@ -37,8 +37,11 @@ function Registro() {
     }
     setCargando(true);
     try {
-      await registrarUsuario(form);
-      navigate('/login');
+      const datos = await registrarUsuario(form);
+      if (onIniciarSesion) {
+        onIniciarSesion(datos);
+      }
+      navigate('/productos');
     } catch (err) {
       setError(err.message || 'No se pudo completar el registro. Intenta con otro email.');
     } finally {
@@ -190,22 +193,6 @@ function Registro() {
             </div>
           </div>
 
-          {/* Tipo de cuenta */}
-          <div className="flex flex-col">
-            <label className="font-label-caps text-[10px] text-outline uppercase tracking-wider mb-1" htmlFor="rolId">
-              Tipo de cuenta
-            </label>
-            <select
-              id="rolId"
-              name="rolId"
-              className="w-full bg-transparent border-0 border-b border-outline/30 py-3 px-0 focus:ring-0 focus:border-primary font-body-md text-on-surface cursor-pointer"
-              value={form.rolId}
-              onChange={handleChange}
-            >
-              <option value={1} className="bg-background text-on-surface">Comprador — Explorar y adquirir piezas exclusivas</option>
-              <option value={2} className="bg-background text-on-surface">Vendedor — Gestionar catálogo y publicaciones</option>
-            </select>
-          </div>
 
           {/* Botón de envío */}
           <button

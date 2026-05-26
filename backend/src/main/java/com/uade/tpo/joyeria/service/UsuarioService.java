@@ -168,4 +168,20 @@ public class UsuarioService implements UserDetailsService {
         }
         usuarioRepository.deleteById(id);
     }
+
+    @Transactional
+    public AuthResponse convertirseEnVendedor(Long id) {
+        Usuario usuario = obtenerPorId(id);
+        if (usuario.getRol().getIdRol() != 1) {
+            throw new IllegalArgumentException("Sólo los compradores pueden convertirse en vendedores.");
+        }
+        Role rolVendedor = roleRepository.findById(2L)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol VENDEDOR no encontrado"));
+        usuario.setRol(rolVendedor);
+        Usuario guardado = usuarioRepository.save(usuario);
+        
+        String token = jwtService.generateToken(guardado);
+        return mapearAAuthResponse(guardado, token);
+    }
 }
+
