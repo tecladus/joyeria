@@ -3,7 +3,7 @@ name: Deploy a Producción
 on:
   push:
     branches:
-      - main
+      - main  # O el nombre de tu rama principal (ej: master)
 
 jobs:
   deploy:
