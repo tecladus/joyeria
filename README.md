@@ -3,17 +3,17 @@
 
 ---
 
-## 🏛️ Información Académica
+## Información Académica
 
 * **Institución:** Universidad Argentina de la Empresa (UADE)
 * **Facultad:** Facultad de Ingeniería (FAIN)
 
 ---
 
-## 👥 Integrantes del Equipo
+## Integrantes del Equipo
 
 | Nombre y Apellido | Legajo |
-| :--- | :--- | :--- |
+| :--- | :--- |
 | **FICER OCTAVIO BENJAMIN GABRIEL** | *(S/D)* |
 | **KARKOSZKA IVAN** | **1149738** |
 | **LOPEZ LOPEZ BAUTISTA** | *(S/D)* |
@@ -21,7 +21,7 @@
 | **MONES RUIZ IGNACIO** | *1201656* |
 ---
 
-## 💎 Descripción del Proyecto
+## Descripción del Proyecto
 
 **Atelier Aura** es una plataforma de comercio electrónico exclusiva para joyería fina y de alta gama. El diseño visual prioriza la elegancia y la sofisticación utilizando técnicas modernas de desarrollo web como:
 * **Rich Aesthetics & Glassmorphism:** Interfaz estilizada con efectos de desenfoque y capas traslúcidas que emulan una joyería física de lujo.
@@ -30,24 +30,24 @@
 
 ---
 
-## 🛠️ Arquitectura y Tecnologías
+## Arquitectura y Tecnologías
 
 El proyecto se divide en una arquitectura desacoplada de Cliente-Servidor:
 
-### ☕ Backend
+### Backend
 * **Tecnología Principal:** Java 17 + Spring Boot 3
 * **Seguridad:** Spring Security con Autenticación basada en Tokens Stateless JWT (JSON Web Tokens).
 * **Persistencia:** JPA / Hibernate mapeado a base de datos PostgreSQL.
 * **Control de Excepciones:** `GlobalExceptionHandler` unificado para control de integridad referencial, recursos no encontrados y accesos prohibidos.
 
-### ⚛️ Frontend
+### Frontend
 * **Tecnología Principal:** React (Vite SPA) + JavaScript (ES6+).
 * **Estilos:** Vanilla CSS moderno con variables CSS centralizadas y tokens de diseño para control ágil de HSL, fuentes elegantes y transiciones.
 * **Navegación:** React Router para transiciones rápidas sin recarga de página.
 
 ---
 
-## 🔐 Matriz de Control de Acceso (RBAC)
+## Matriz de Control de Acceso (RBAC)
 
 El sistema implementa 4 roles de usuario diferenciados con su respectivo nivel de autorización:
 
