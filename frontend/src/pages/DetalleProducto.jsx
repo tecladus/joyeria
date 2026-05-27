@@ -33,7 +33,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
   const [tallaSeleccionada, setTallaSeleccionada] = useState(null);
   const [imagenActiva, setImagenActiva] = useState('');
   const [recomendados, setRecomendados] = useState([]);
-  const [enFavoritos, setEnFavoritos] = useState(false);
   const [mostrarGuiaTallas, setMostrarGuiaTallas] = useState(false);
 
   // Carga el producto por ID
@@ -104,40 +103,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
   const categoriaIngles = producto?.categoria ? (CATEGORY_TRANSLATIONS[producto.categoria] || producto.categoria) : '';
   const catNombre = (producto?.categoria || '').trim().toLowerCase();
   const esAnillo = catNombre === 'anillos' || catNombre === 'rings';
-
-  // Metadatos dinámicos premium para el detalle
-  const especificaciones = (() => {
-    if (categoriaIngles === 'Rings') {
-      return {
-        material: 'Oro Amarillo Macizo de 18K',
-        gemstone: 'Diamante VVS1, 1.2ct',
-        cut: 'Excelente Brillante',
-        certification: 'Certificado GIA'
-      };
-    }
-    if (categoriaIngles === 'Necklaces') {
-      return {
-        material: 'Montura de Oro Amarillo de 18K',
-        gemstone: 'Perla Keshi Aura, 9mm',
-        cut: 'Orgánico Seleccionado a Mano',
-        certification: 'Certificado Aura'
-      };
-    }
-    if (categoriaIngles === 'Earrings') {
-      return {
-        material: 'Oro Blanco Macizo de 18K',
-        gemstone: 'Diamantes Redondos VVS2, 0.6ct',
-        cut: 'Corte Ideal',
-        certification: 'Certificado Aura'
-      };
-    }
-    return {
-      material: 'Latón con Baño de Oro de 18K',
-      gemstone: 'Diamantes Éticos de Corte Redondo',
-      cut: 'Corte Muy Bueno',
-      certification: 'Garantía de Calidad'
-    };
-  })();
 
   const imagenesSecundarias = producto ? [producto.imagenUrl].filter(Boolean) : [];
 
@@ -255,28 +220,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                   </p>
                 </div>
 
-                {/* Especificaciones */}
-                <div className="border-t border-outline-variant/10 pt-6">
-                  <div className="grid grid-cols-2 gap-y-6 gap-x-8 text-xs">
-                    <div>
-                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Material</span>
-                      <span className="font-body-md text-on-surface font-light">{especificaciones.material}</span>
-                    </div>
-                    <div>
-                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Gema</span>
-                      <span className="font-body-md text-on-surface font-light">{especificaciones.gemstone}</span>
-                    </div>
-                    <div>
-                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Corte</span>
-                      <span className="font-body-md text-on-surface font-light">{especificaciones.cut}</span>
-                    </div>
-                    <div>
-                      <span className="font-label-caps text-[9px] text-outline uppercase tracking-widest block mb-1">Certificación</span>
-                      <span className="font-body-md text-on-surface font-light">{especificaciones.certification}</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Selector de Tallas (solo para Anillos) */}
                 {esAnillo && (
                   <div className="border-t border-outline-variant/10 pt-6">
@@ -340,21 +283,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                         className="flex-grow py-5 bg-on-surface text-background font-label-caps text-label-caps hover:bg-primary transition-all duration-500 disabled:opacity-50 disabled:hover:bg-on-surface disabled:cursor-not-allowed uppercase tracking-widest text-xs font-semibold cursor-pointer rounded-sm"
                       >
                         {agregando ? 'Añadiendo...' : sinStock ? 'Agotado' : 'Añadir a la Bolsa'}
-                      </button>
-
-                      {/* Add to Wishlist Button */}
-                      <button
-                        onClick={() => setEnFavoritos(!enFavoritos)}
-                        className={`px-5 border transition-all flex items-center justify-center cursor-pointer rounded-sm ${
-                          enFavoritos 
-                            ? 'border-primary bg-primary/5 text-primary' 
-                            : 'border-outline-variant/40 text-secondary hover:border-primary hover:text-primary'
-                        }`}
-                        title="Añadir a la Lista de Deseos"
-                      >
-                        <span className={`material-symbols-outlined text-xl ${enFavoritos ? 'fill-1' : ''}`}>
-                          favorite
-                        </span>
                       </button>
                     </div>
                 </div>
