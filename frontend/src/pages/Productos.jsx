@@ -261,28 +261,6 @@ function Productos({ auth, onActualizarCarrito }) {
                 </ul>
               </div>
 
-              {/* Materiales */}
-              <div className="border-t border-outline-variant/20 pt-8">
-                <h3 className="font-label-caps text-label-caps text-on-surface mb-4 uppercase tracking-wider text-xs font-semibold">
-                  Material
-                </h3>
-                <ul className="space-y-3">
-                  {MATERIALES.map((mat) => (
-                    <li key={mat.id} className="flex items-center">
-                      <label className="flex items-center gap-3 cursor-pointer text-sm font-body-md text-secondary hover:text-primary transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={materialesSeleccionados.includes(mat.id)}
-                          onChange={() => toggleMaterial(mat.id)}
-                          className="rounded border-outline-variant/60 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
-                        />
-                        <span>{mat.label}</span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
               {/* Rango de Precios */}
               <div className="border-t border-outline-variant/20 pt-8">
                 <h3 className="font-label-caps text-label-caps text-on-surface mb-4 uppercase tracking-wider text-xs font-semibold">
