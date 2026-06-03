@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import RutaProtegida from './components/RutaProtegida';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/Login';
@@ -62,6 +63,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="flex flex-col min-h-screen bg-background">
         <NavBar auth={auth} onCerrarSesion={cerrarSesion} cantidadCarrito={cantidadCarrito} onActualizarAuth={iniciarSesion} />
         <div className="flex-grow">
