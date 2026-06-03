@@ -159,7 +159,7 @@ function PanelModerador() {
             {tabActiva === 'users' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="bg-surface-container-low border border-outline-variant/10 p-4 rounded text-xs text-secondary font-body-md">
-                  📖 Vista de Auditoría: El rol de moderador tiene acceso de lectura para verificar cuentas y detectar comportamientos inusuales. No tiene permisos de modificación sobre cuentas.
+                  Vista de Auditoría: El rol de moderador tiene acceso de lectura para verificar cuentas y detectar comportamientos inusuales. No tiene permisos de modificación sobre cuentas.
                 </div>
                 <div className="overflow-x-auto bg-surface-container-lowest border border-outline-variant/20 rounded shadow-sm">
                   <table className="w-full text-left text-sm border-collapse">
@@ -199,7 +199,7 @@ function PanelModerador() {
             {tabActiva === 'catalog' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="bg-surface-container-low border border-outline-variant/10 p-4 rounded text-xs text-secondary font-body-md">
-                  ⚖️ Control de Catálogo: Puedes dar de baja cualquier publicación que infrinja los términos de calidad y veracidad del Atelier Aura. Los moderadores no pueden editar precios ni stock.
+                  Control de Catálogo: Puedes dar de baja cualquier publicación que infrinja los términos de calidad y veracidad del Atelier Aura. Los moderadores no pueden editar precios ni stock.
                 </div>
                 <div className="overflow-x-auto bg-surface-container-lowest border border-outline-variant/20 rounded shadow-sm">
                   <table className="w-full text-left text-sm border-collapse">
@@ -271,7 +271,19 @@ function PanelModerador() {
                       {ordenes.map((o) => (
                         <tr key={o.idOrden} className="hover:bg-surface-container-low/30 transition-colors">
                           <td className="p-4 font-semibold text-primary">#{o.idOrden}</td>
-                          <td className="p-4 font-semibold text-on-surface">{o.usuario}</td>
+                          <td className="p-4">
+                            <div className="font-semibold text-on-surface">{o.usuario}</div>
+                            {o.metodoPago && (
+                              <div className="text-xs text-primary capitalize font-medium mt-1">
+                                Pago: {o.metodoPago}
+                              </div>
+                            )}
+                            {o.direccion && (
+                              <div className="text-[10px] text-outline line-clamp-1 max-w-[200px] mt-0.5" title={`${o.nombreCompleto} - ${o.direccion}, ${o.ciudad}`}>
+                                Envío: {o.direccion}
+                              </div>
+                            )}
+                          </td>
                           <td className="p-4 text-secondary text-xs font-body-md">
                             {new Date(o.fecha).toLocaleDateString('es-AR')}
                           </td>
@@ -314,7 +326,7 @@ function PanelModerador() {
             {tabActiva === 'categories' && (
               <div className="space-y-6 animate-fade-in">
                 <div className="bg-surface-container-low border border-outline-variant/10 p-4 rounded text-xs text-secondary font-body-md">
-                  📖 Vista de Categorías: Muestra las divisiones activas en el Atelier. El moderador no puede crear ni borrar categorías.
+                  Vista de Categorías: Muestra las divisiones activas en el Atelier. El moderador no puede crear ni borrar categorías.
                 </div>
                 <div className="overflow-x-auto bg-surface-container-lowest border border-outline-variant/20 rounded shadow-sm max-w-xl">
                   <table className="w-full text-left text-sm border-collapse">

@@ -170,6 +170,26 @@ function HistorialCompras() {
                             ))}
                           </div>
                           
+                          {/* Envío y Pago */}
+                          {(orden.metodoPago || orden.direccion) && (
+                            <div className="mt-6 pt-6 border-t border-outline-variant/15 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-body-md bg-surface-container-low/40 p-4 rounded">
+                              {orden.metodoPago && (
+                                <div>
+                                  <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider block mb-1">Método de Pago</span>
+                                  <span className="text-on-surface capitalize font-medium">{orden.metodoPago}</span>
+                                </div>
+                              )}
+                              {orden.direccion && (
+                                <div>
+                                  <span className="font-label-caps text-[10px] text-outline uppercase tracking-wider block mb-1">Detalles de Envío</span>
+                                  <span className="text-on-surface block font-medium">{orden.nombreCompleto}</span>
+                                  <span className="text-secondary block font-light">{orden.direccion}, {orden.ciudad} (CP {orden.codigoPostal})</span>
+                                  <span className="text-secondary block font-light">Tel: {orden.telefono}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Pie del Detalle */}
                           <div className="mt-6 pt-4 border-t border-outline-variant/10 flex justify-between items-center text-xs">
                             <span className="font-body-md text-outline">

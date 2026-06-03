@@ -480,10 +480,10 @@ function Carrito() {
                           <strong className="text-on-surface font-medium block mt-1">Av. Alvear 1890, Recoleta, CABA.</strong>
                         </p>
                         <p>
-                          ⏰ <strong>Horarios:</strong> Lunes a Viernes de 10:00 a 19:00, Sábados de 10:00 a 14:00.
+                          <strong>Horarios:</strong> Lunes a Viernes de 10:00 a 19:00, Sábados de 10:00 a 14:00.
                         </p>
                         <p className="border-t border-outline-variant/10 pt-3">
-                          💡 <em>Presenta tu DNI y el número de confirmación al retirar tu pieza.</em>
+                          <em>Presenta tu DNI y el número de confirmación al retirar tu pieza.</em>
                         </p>
                       </div>
                     )}

@@ -556,7 +556,19 @@ function PanelAdmin() {
                       {ordenes.map((o) => (
                         <tr key={o.idOrden} className="hover:bg-surface-container-low/30 transition-colors">
                           <td className="p-4 font-semibold text-primary">#{o.idOrden}</td>
-                          <td className="p-4 font-semibold text-on-surface">{o.usuario}</td>
+                          <td className="p-4">
+                            <div className="font-semibold text-on-surface">{o.usuario}</div>
+                            {o.metodoPago && (
+                              <div className="text-xs text-primary capitalize font-medium mt-1">
+                                Pago: {o.metodoPago}
+                              </div>
+                            )}
+                            {o.direccion && (
+                              <div className="text-[10px] text-outline line-clamp-1 max-w-[200px] mt-0.5" title={`${o.nombreCompleto} - ${o.direccion}, ${o.ciudad}`}>
+                                Envío: {o.direccion}
+                              </div>
+                            )}
+                          </td>
                           <td className="p-4 text-secondary text-xs">
                             {new Date(o.fecha).toLocaleDateString('es-AR', {
                               day: '2-digit', month: '2-digit', year: 'numeric',
