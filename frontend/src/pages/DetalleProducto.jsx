@@ -31,14 +31,25 @@ function DetalleProducto() {
   const favoritos = useSelector((state) => state.favoritos.items || []);
   const deviceMultiplier = useDeviceMultiplier();
 
-  const { itemSeleccionado: producto, cargando, error, items: todosLosProductos } = useSelector((state) => state.productos);
+  const { itemSeleccionado: producto, cargando, error: errorProducto, items: todosLosProductos } = useSelector((state) => state.productos);
   const esFavorito = producto && favoritos.some((item) => item.idProducto === producto.idProducto);
+  const [error, setError] = useState('');
   const [agregando, setAgregando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
   const [tallaSeleccionada, setTallaSeleccionada] = useState(null);
   const [imagenActiva, setImagenActiva] = useState('');
   const [mostrarGuiaTallas, setMostrarGuiaTallas] = useState(false);
+
+  // Auto-dismiss local errors after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const recomendados = useMemo(() => {
     return (todosLosProductos || [])
@@ -139,9 +150,12 @@ function DetalleProducto() {
           <span className="text-on-surface font-semibold truncate max-w-[200px]">{producto?.nombre}</span>
         </nav>
 
-        {error && (
-          <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-8 font-body-md text-sm">
-            {error}
+        {(error || errorProducto) && (
+          <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-8 font-body-md text-sm flex justify-between items-center animate-fade-in">
+            <span>{error || errorProducto}</span>
+            <button onClick={() => { setError(''); }} className="bg-transparent border-0 text-error cursor-pointer flex items-center justify-center">
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
           </div>
         )}
 
