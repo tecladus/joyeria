@@ -32,15 +32,18 @@ public class UsuarioService implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final MailService mailService;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           RoleRepository roleRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          MailService mailService) {
         this.usuarioRepository = usuarioRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.mailService = mailService;
     }
 
     // Spring Security llama a este metodo en cada request con token
@@ -78,6 +81,13 @@ public class UsuarioService implements UserDetailsService {
         usuario.setRol(rol);
 
         Usuario guardado = usuarioRepository.save(usuario);
+
+        // Enviar email de bienvenida
+        try {
+            mailService.enviarCorreoBienvenida(guardado.getEmail(), guardado.getNombre() + " " + guardado.getApellido());
+        } catch (Exception e) {
+            System.err.println("Error al enviar email de bienvenida: " + e.getMessage());
+        }
 
         String token = jwtService.generateToken(guardado);
         return mapearAAuthResponse(guardado, token);

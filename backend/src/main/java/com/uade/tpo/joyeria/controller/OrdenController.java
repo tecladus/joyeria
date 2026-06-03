@@ -3,6 +3,8 @@ package com.uade.tpo.joyeria.controller;
 import com.uade.tpo.joyeria.dto.OrdenResponse;
 import com.uade.tpo.joyeria.entity.Usuario;
 import com.uade.tpo.joyeria.service.OrdenService;
+import com.uade.tpo.joyeria.dto.CheckoutRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 // Endpoints de ordenes. Solo accesible para COMPRADOR.
-// El checkout convierte el carrito en una orden permanente sin necesitar body.
 @RestController
 @RequestMapping("/api/ordenes")
 public class OrdenController {
@@ -23,9 +24,10 @@ public class OrdenController {
     }
 
     @PostMapping("/checkout")
-    public ResponseEntity<OrdenResponse> checkout(@AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<OrdenResponse> checkout(@AuthenticationPrincipal Usuario usuario,
+                                                  @Valid @RequestBody CheckoutRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ordenService.checkout(usuario.getIdUsuario()));
+                .body(ordenService.checkout(usuario.getIdUsuario(), request));
     }
 
     @GetMapping

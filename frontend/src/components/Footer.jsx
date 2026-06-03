@@ -153,7 +153,7 @@ function Footer() {
               </a>
             </div>
             <p className="font-body-md text-secondary text-xs pt-2 font-light">
-              Basados en Londres, envíos a todo el mundo.
+              Basados en La campeona del Mundo (2022), envíos a todo el mundo.
             </p>
           </div>
         </div>

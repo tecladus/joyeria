@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getCarrito, modificarCantidadItem, eliminarDelCarrito, hacerCheckout } from '../services/api';
 import CarritoItem from '../components/CarritoItem';
 import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { adjustPriceByDevice, deviceDetector } from '../services/deviceDetection';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -17,6 +18,7 @@ function Carrito() {
   const [operando, setOperando] = useState(false);
   const [error, setError] = useState('');
   const [checkoutExitoso, setCheckoutExitoso] = useState(false);
+  const [inicializado, setInicializado] = useState(false);
 
   // Estados de Checkout / Pago
   const [paso, setPaso] = useState('carrito'); // 'carrito' o 'pago'
@@ -36,17 +38,19 @@ function Carrito() {
   });
   const [transferenciaConfirmada, setTransferenciaConfirmada] = useState(false);
 
-  // Pre-cargar datos de la cuenta logueada en el formulario de envío
+  // Pre-cargar datos de la cuenta logueada en el formulario de envío una sola vez
   useEffect(() => {
-    if (auth) {
-      setDatosEnvio((prev) => ({
-        ...prev,
-        nombreCompleto: prev.nombreCompleto || `${auth.nombre || ''} ${auth.apellido || ''}`.trim(),
-        direccion: prev.direccion || auth.direccion || '',
-        telefono: prev.telefono || auth.telefono || '',
-      }));
+    if (auth && !inicializado && auth.nombre) {
+      setDatosEnvio({
+        nombreCompleto: `${auth.nombre || ''} ${auth.apellido || ''}`.trim(),
+        direccion: auth.direccion || '',
+        ciudad: '',
+        codigoPostal: '',
+        telefono: auth.telefono || '',
+      });
+      setInicializado(true);
     }
-  }, [auth]);
+  }, [auth, inicializado]);
 
   const cargarCarrito = useCallback(async () => {
     setCargando(true);
@@ -132,7 +136,16 @@ function Carrito() {
     setOperando(true);
     setError('');
     try {
-      await hacerCheckout(auth.idUsuario);
+      const datosCheckout = {
+        metodoPago,
+        nombreCompleto: datosEnvio.nombreCompleto,
+        direccion: datosEnvio.direccion,
+        ciudad: datosEnvio.ciudad,
+        codigoPostal: datosEnvio.codigoPostal,
+        telefono: datosEnvio.telefono,
+        multiplicadorDispositivo: deviceDetector.multiplier.multiplier
+      };
+      await hacerCheckout(auth.idUsuario, datosCheckout);
       setCheckoutExitoso(true);
       dispatch(setCantidadCarrito(0));
     } catch (err) {
@@ -143,7 +156,7 @@ function Carrito() {
   };
 
   const items = carrito?.items || [];
-  const total = carrito?.total || 0;
+  const total = items.reduce((s, i) => s + (adjustPriceByDevice(i.precioUnitario) * i.cantidad), 0);
   const cantidadItems = items.reduce((s, i) => s + i.cantidad, 0);
 
   if (cargando) {

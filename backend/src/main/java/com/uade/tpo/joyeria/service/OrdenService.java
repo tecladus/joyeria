@@ -1,6 +1,7 @@
 package com.uade.tpo.joyeria.service;
 
 import com.uade.tpo.joyeria.dto.OrdenResponse;
+import com.uade.tpo.joyeria.dto.CheckoutRequest;
 import com.uade.tpo.joyeria.entity.*;
 import com.uade.tpo.joyeria.exception.RecursoNoEncontradoException;
 import com.uade.tpo.joyeria.exception.StockInsuficienteException;
@@ -23,22 +24,25 @@ public class OrdenService {
     private final ProductoRepository productoRepository;
     private final UsuarioService usuarioService;
     private final CarritoService carritoService;
+    private final MailService mailService;
 
     public OrdenService(OrdenRepository ordenRepository,
                         ProductoRepository productoRepository,
                         UsuarioService usuarioService,
-                        CarritoService carritoService) {
+                        CarritoService carritoService,
+                        MailService mailService) {
         this.ordenRepository = ordenRepository;
         this.productoRepository = productoRepository;
         this.usuarioService = usuarioService;
         this.carritoService = carritoService;
+        this.mailService = mailService;
     }
 
     // @Transactional es critico: agrupa todas las operaciones en una sola transaccion.
     // Si algo falla (ej: stock insuficiente en el tercer item), se revierte todo. O todo pasa, o nada.
     // Pasos: validar carrito → validar stock → crear orden → descontar stock → cerrar carrito.
     @Transactional
-    public OrdenResponse checkout(Long usuarioId) {
+    public OrdenResponse checkout(Long usuarioId, CheckoutRequest checkoutRequest) {
         Usuario usuario = usuarioService.obtenerPorId(usuarioId);
         Carrito carrito = carritoService.obtenerOCrearCarritoActivo(usuario);
 
@@ -60,6 +64,12 @@ public class OrdenService {
         orden.setUsuario(usuario);
         orden.setFecha(LocalDateTime.now());
         orden.setEstado("PENDIENTE");
+        orden.setMetodoPago(checkoutRequest.getMetodoPago());
+        orden.setNombreCompleto(checkoutRequest.getNombreCompleto());
+        orden.setDireccion(checkoutRequest.getDireccion());
+        orden.setCiudad(checkoutRequest.getCiudad());
+        orden.setCodigoPostal(checkoutRequest.getCodigoPostal());
+        orden.setTelefono(checkoutRequest.getTelefono());
 
         List<DetalleOrden> detalles = carrito.getItems().stream()
                 .map(item -> {
@@ -72,8 +82,14 @@ public class OrdenService {
                     detalle.setOrden(orden);
                     detalle.setProducto(producto);
                     detalle.setCantidad(item.getCantidad());
-                    // El precio se "congela" en el detalle. Si cambia despues, el historial queda intacto.
-                    detalle.setPrecioUnitario(producto.getPrecio());
+                    
+                    // Aplicar multiplicador del dispositivo si viene en el request
+                    BigDecimal precioUnitario = producto.getPrecio();
+                    if (checkoutRequest.getMultiplicadorDispositivo() != null) {
+                        precioUnitario = precioUnitario.multiply(checkoutRequest.getMultiplicadorDispositivo())
+                                .setScale(2, java.math.RoundingMode.HALF_UP);
+                    }
+                    detalle.setPrecioUnitario(precioUnitario);
                     return detalle;
                 })
                 .collect(Collectors.toList());
@@ -90,6 +106,14 @@ public class OrdenService {
         carrito.setActivo(false);
 
         Orden guardada = ordenRepository.save(orden);
+
+        // Intentamos enviar el mail de confirmación
+        try {
+            mailService.enviarConfirmacionCompra(usuario.getEmail(), guardada);
+        } catch (Exception e) {
+            System.err.println("Error al enviar email de confirmacion de orden: " + e.getMessage());
+        }
+
         return mapearAResponse(guardada);
     }
 
@@ -167,6 +191,12 @@ public class OrdenService {
                 .estado(orden.getEstado())
                 .total(orden.getTotal())
                 .usuario(orden.getUsuario().getNombre())
+                .metodoPago(orden.getMetodoPago())
+                .nombreCompleto(orden.getNombreCompleto())
+                .direccion(orden.getDireccion())
+                .ciudad(orden.getCiudad())
+                .codigoPostal(orden.getCodigoPostal())
+                .telefono(orden.getTelefono())
                 .detalles(detalles)
                 .build();
     }

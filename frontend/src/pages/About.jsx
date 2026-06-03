@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { enviarContacto } from '../services/api';
 
 function About() {
   const location = useLocation();
@@ -15,6 +16,8 @@ function About() {
   const [pasoActivo, setPasoActivo] = useState(0);
   const [toastRedes, setToastRedes] = useState('');
   const [mapHovered, setMapHovered] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [errorContacto, setErrorContacto] = useState('');
 
   const pasosOficio = [
     {
@@ -39,9 +42,18 @@ function About() {
     }
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMostrarModalContacto(true);
+    setEnviando(true);
+    setErrorContacto('');
+    try {
+      await enviarContacto(formData);
+      setMostrarModalContacto(true);
+    } catch (err) {
+      setErrorContacto(err.message || 'Error al enviar el mensaje. Intente de nuevo.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const handleRedesClick = (red) => {
@@ -168,6 +180,11 @@ function About() {
                 </p>
               </div>
 
+              {errorContacto && (
+                <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-6 font-body-md text-sm">
+                  {errorContacto}
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="relative">
@@ -218,9 +235,10 @@ function About() {
 
                 <button
                   type="submit"
-                  className="font-label-caps text-label-caps bg-on-surface text-background px-10 py-4 hover:bg-primary hover:text-white transition-colors tracking-widest uppercase text-xs font-semibold cursor-pointer rounded-sm"
+                  disabled={enviando}
+                  className="font-label-caps text-label-caps bg-on-surface text-background px-10 py-4 hover:bg-primary hover:text-white transition-colors tracking-widest uppercase text-xs font-semibold cursor-pointer rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Enviar Mensaje
+                  {enviando ? 'Enviando...' : 'Enviar Mensaje'}
                 </button>
               </form>
             </div>

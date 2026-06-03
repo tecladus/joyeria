@@ -34,6 +34,21 @@ public class Orden {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
+    @Column(name = "metodo_pago")
+    private String metodoPago;
+
+    @Column(name = "nombre_completo")
+    private String nombreCompleto;
+
+    private String direccion;
+
+    private String ciudad;
+
+    @Column(name = "codigo_postal")
+    private String codigoPostal;
+
+    private String telefono;
+
     @OneToMany(mappedBy = "orden", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleOrden> detalles = new ArrayList<>();
 }

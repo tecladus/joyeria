@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { adjustPriceByDevice } from '../services/deviceDetection';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
 
 function CarritoItem({ item, onCambiarCantidad, onEliminar, cargando }) {
   const [errorImagen, setErrorImagen] = useState(false);
+  const precioAjustado = adjustPriceByDevice(item.precioUnitario);
+  const subtotalAjustado = precioAjustado * item.cantidad;
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 py-6 border-b border-outline-variant/10 text-on-surface">
@@ -28,7 +31,7 @@ function CarritoItem({ item, onCambiarCantidad, onEliminar, cargando }) {
             {item.nombreProducto}
           </h4>
           <p className="font-body-md text-sm text-secondary">
-            {formatearPrecio(item.precioUnitario)} c/u
+            {formatearPrecio(precioAjustado)} c/u
           </p>
         </div>
       </div>
@@ -60,7 +63,7 @@ function CarritoItem({ item, onCambiarCantidad, onEliminar, cargando }) {
 
         {/* Subtotal */}
         <div className="w-28 text-right font-body-md font-semibold text-primary">
-          {formatearPrecio(item.subtotal)}
+          {formatearPrecio(subtotalAjustado)}
         </div>
 
         {/* Botón Eliminar */}

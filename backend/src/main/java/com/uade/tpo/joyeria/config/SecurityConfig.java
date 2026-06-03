@@ -56,8 +56,8 @@ public class SecurityConfig {
                 // Permitir todas las solicitudes OPTIONS (CORS preflight) sin autenticación.
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Registro y login son publicos.
-                .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
+                // Registro, login y formulario de contacto son publicos.
+                .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "/api/contacto").permitAll()
 
                 // Endpoints administrativos de usuarios.
                 .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAnyAuthority("ADMIN", "MODERATOR")

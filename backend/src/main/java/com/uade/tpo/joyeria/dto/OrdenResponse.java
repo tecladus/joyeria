@@ -16,6 +16,12 @@ public class OrdenResponse {
     private String estado;
     private BigDecimal total;
     private String usuario;
+    private String metodoPago;
+    private String nombreCompleto;
+    private String direccion;
+    private String ciudad;
+    private String codigoPostal;
+    private String telefono;
     private List<DetalleOrdenResponse> detalles;
 
     @Data

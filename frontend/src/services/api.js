@@ -171,10 +171,11 @@ export const eliminarDelCarrito = async (itemId, usuarioId) => {
 //        ÓRDENES
 // ========================
 
-export const hacerCheckout = async (usuarioId) => {
+export const hacerCheckout = async (usuarioId, datosCheckout) => {
   const res = await fetch(`${BASE_URL}/ordenes/checkout?usuarioId=${usuarioId}`, {
     method: 'POST',
     headers: getHeaders(),
+    body: JSON.stringify(datosCheckout),
   });
   return manejarRespuesta(res);
 };
@@ -258,6 +259,15 @@ export const convertirseEnVendedor = async () => {
   const res = await fetch(`${BASE_URL}/usuarios/ser-vendedor`, {
     method: 'PUT',
     headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
+export const enviarContacto = async (datosContacto) => {
+  const res = await fetch(`${BASE_URL}/contacto`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datosContacto),
   });
   return manejarRespuesta(res);
 };
