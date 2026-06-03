@@ -56,12 +56,12 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
         {/* Badges superiores */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
           {producto.descuento > 0 && (
-            <span className="px-3 py-1 font-label-caps text-[10px] border border-error/20 text-error backdrop-blur-md bg-white/60">
+            <span className="px-3 py-1 font-label-caps text-[10px] border border-error/20 text-error backdrop-blur-md bg-surface-container-lowest/60">
               -{producto.descuento}%
             </span>
           )}
           {sinStock && (
-            <span className="px-3 py-1 font-label-caps text-[10px] border border-outline-variant/30 text-secondary backdrop-blur-md bg-white/60">
+            <span className="px-3 py-1 font-label-caps text-[10px] border border-outline-variant/30 text-secondary backdrop-blur-md bg-surface-container-lowest/60">
               Sin stock
             </span>
           )}

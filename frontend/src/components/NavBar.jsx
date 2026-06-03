@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { convertirseEnVendedor } from '../services/api';
 import { useModal } from './ModalContext';
 import { iniciarSesion, cerrarSesion } from '../redux/slices/authSlice';
+import SelectorTema from './SelectorTema';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -266,6 +267,9 @@ function NavBar() {
                 </div>
               )}
             </div>
+            
+            {/* Selector de Tema (Escritorio) */}
+            <SelectorTema />
           </div>
 
           {/* Icono de bolsa de compras directo */}
@@ -345,6 +349,12 @@ function NavBar() {
           >
             Contacto
           </Link>
+          
+          {/* Selector de Tema (Móvil) */}
+          <div className="flex justify-between items-center py-2 border-b border-outline-variant/5">
+            <span className="font-label-caps text-label-caps text-on-surface-variant">Apariencia</span>
+            <SelectorTema />
+          </div>
           
           {estaLogueado && (esVendedor || esAdmin || esModerador) && (
             <Link

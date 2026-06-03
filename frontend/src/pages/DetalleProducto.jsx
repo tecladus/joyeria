@@ -163,7 +163,7 @@ function DetalleProducto() {
                     </div>
                   )}
                   {producto.descuento > 0 && (
-                    <span className="absolute top-4 left-4 px-3 py-1 font-label-caps text-[9px] border border-primary text-primary backdrop-blur-md bg-white/20 uppercase tracking-widest">
+                    <span className="absolute top-4 left-4 px-3 py-1 font-label-caps text-[9px] border border-primary text-primary backdrop-blur-md bg-surface-container-lowest/20 uppercase tracking-widest">
                       -{producto.descuento}% DTO
                     </span>
                   )}

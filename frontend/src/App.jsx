@@ -23,6 +23,39 @@ import { fetchCantidadCarrito } from './redux/slices/carritoSlice';
 function App() {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
+  const theme = useSelector((state) => state.theme.theme);
+
+  // Sincronizar el tema seleccionado con la clase del documento DOM
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const aplicarTema = () => {
+      const isDark =
+        theme === 'dark' ||
+        (theme === 'system' && systemPrefersDark.matches);
+
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    aplicarTema();
+
+    if (theme === 'system') {
+      const listener = (e) => {
+        if (e.matches) {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+      };
+      systemPrefersDark.addEventListener('change', listener);
+      return () => systemPrefersDark.removeEventListener('change', listener);
+    }
+  }, [theme]);
 
   // Al montar y cuando cambia el auth, carga la cantidad del carrito si está autenticado
   useEffect(() => {
