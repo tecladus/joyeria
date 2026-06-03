@@ -1,113 +1,122 @@
+import axios from 'axios';
+
 const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8080/api'
   : '/api';
 
-/* Construye los headers. Los endpoints públicos (GET productos/categorías) no necesitan auth. */
-const getHeaders = (conAuth = true) => {
-  const headers = { 'Content-Type': 'application/json' };
-  if (conAuth) {
-    const token = localStorage.getItem('token');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-};
+const api = axios.create({
+  baseURL: BASE_URL,
+});
 
-/* Maneja la respuesta de fetch: lanza un error con el mensaje del backend si falla. */
-const manejarRespuesta = async (res) => {
-  if (!res.ok) {
-    let mensajeError = '';
-    try {
-      const cuerpo = await res.json();
-      if (cuerpo && typeof cuerpo === 'object') {
-        if (cuerpo.message || cuerpo.error) {
-          mensajeError = cuerpo.message || cuerpo.error || '';
-        } else {
-          // Si es un mapa de validaciones (ej. { email: "...", password: "..." })
-          const valores = Object.values(cuerpo);
-          if (valores.length > 0) {
-            mensajeError = valores.join(' ');
-          }
+/* Maneja la respuesta de error de axios: extrae el mensaje adecuado y lo traduce si es genérico */
+const manejarErrorAxios = (error) => {
+  let mensajeError = '';
+  let status = 0;
+
+  if (error.response) {
+    status = error.response.status;
+    const cuerpo = error.response.data;
+    if (cuerpo && typeof cuerpo === 'object') {
+      if (cuerpo.message || cuerpo.error) {
+        mensajeError = cuerpo.message || cuerpo.error || '';
+      } else {
+        const valores = Object.values(cuerpo);
+        if (valores.length > 0) {
+          mensajeError = valores.join(' ');
         }
       }
-    } catch {
-      // Si no hay JSON en el error, se usa el mensaje mapeado abajo
     }
+  } else if (error.request) {
+    status = 500;
+    mensajeError = 'No se pudo conectar con el servidor. Verifica tu conexión de red.';
+  } else {
+    status = 400;
+    mensajeError = error.message;
+  }
 
-    // Traducir mensajes genéricos en inglés o vacíos
-    const mensajesGenericos = [
-      'forbidden',
-      'unauthorized',
-      'bad request',
-      'internal server error',
-      'not found',
-      'access denied',
-      'access_denied',
-      'no message available'
-    ];
+  const mensajesGenericos = [
+    'forbidden',
+    'unauthorized',
+    'bad request',
+    'internal server error',
+    'not found',
+    'access denied',
+    'access_denied',
+    'no message available'
+  ];
 
-    const esGenerico = !mensajeError || mensajesGenericos.includes(mensajeError.toLowerCase().trim());
+  const esGenerico = !mensajeError || mensajesGenericos.includes(mensajeError.toLowerCase().trim());
 
-    if (esGenerico) {
-      switch (res.status) {
-        case 400:
-          mensajeError = 'La solicitud es inválida o contiene datos incorrectos.';
-          break;
-        case 401:
-          mensajeError = 'No estás autenticado o tu sesión ha expirado. Por favor, inicia sesión.';
-          break;
-        case 403:
-          mensajeError = 'No tienes permisos suficientes para realizar esta acción.';
-          break;
-        case 404:
-          mensajeError = 'El recurso solicitado no existe.';
-          break;
-        case 429:
-          mensajeError = 'Has realizado demasiados intentos en poco tiempo. Por favor, espera un momento.';
-          break;
-        case 500:
-          mensajeError = 'Ocurrió un error en el servidor. Por favor, intenta de nuevo más tarde.';
-          break;
-        default:
-          mensajeError = `Ocurrió un error inesperado (Código ${res.status}).`;
+  if (esGenerico) {
+    switch (status) {
+      case 400:
+        mensajeError = 'La solicitud es inválida o contiene datos incorrectos.';
+        break;
+      case 401:
+        mensajeError = 'No estás autenticado o tu sesión ha expirado. Por favor, inicia sesión.';
+        break;
+      case 403:
+        mensajeError = 'No tienes permisos suficientes para realizar esta acción.';
+        break;
+      case 404:
+        mensajeError = 'El recurso solicitado no existe.';
+        break;
+      case 429:
+        mensajeError = 'Has realizado demasiados intentos en poco tiempo. Por favor, espera un momento.';
+        break;
+      case 500:
+        mensajeError = 'Ocurrió un error en el servidor. Por favor, intenta de nuevo más tarde.';
+        break;
+      default:
+        mensajeError = `Ocurrió un error inesperado (Código ${status}).`;
+    }
+  }
+  return new Error(mensajeError);
+};
+
+// Interceptor de solicitudes para inyectar dinámicamente el token si corresponde
+api.interceptors.request.use(
+  (config) => {
+    config.headers = config.headers || {};
+    config.headers['Content-Type'] = 'application/json';
+
+    const conAuth = config.conAuth !== false;
+    if (conAuth) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
       }
     }
-    throw new Error(mensajeError);
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor de respuestas para retornar directamente la data o procesar errores
+api.interceptors.response.use(
+  (response) => {
+    return response.data;
+  },
+  (error) => {
+    const errorProcesado = manejarErrorAxios(error);
+    return Promise.reject(errorProcesado);
   }
-  // Algunas respuestas (como DELETE exitoso) no tienen cuerpo
-  const contentType = res.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return res.json();
-  }
-  return null;
-};
+);
 
 // ========================
 //        USUARIOS
 // ========================
 
 export const loginUsuario = async (email, password) => {
-  const res = await fetch(`${BASE_URL}/usuarios/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  return manejarRespuesta(res);
+  return api.post('/usuarios/login', { email, password }, { conAuth: false });
 };
 
 export const getPerfilUsuario = async () => {
-  const res = await fetch(`${BASE_URL}/usuarios/perfil`, {
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.get('/usuarios/perfil');
 };
 
 export const registrarUsuario = async (datos) => {
-  const res = await fetch(`${BASE_URL}/usuarios/registro`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(datos),
-  });
-  return manejarRespuesta(res);
+  return api.post('/usuarios/registro', datos, { conAuth: false });
 };
 
 // ========================
@@ -115,58 +124,31 @@ export const registrarUsuario = async (datos) => {
 // ========================
 
 export const getProductos = async () => {
-  const res = await fetch(`${BASE_URL}/productos`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return manejarRespuesta(res);
+  return api.get('/productos', { conAuth: false });
 };
 
 export const getProductoPorId = async (id) => {
-  const res = await fetch(`${BASE_URL}/productos/${id}`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return manejarRespuesta(res);
+  return api.get(`/productos/${id}`, { conAuth: false });
 };
 
 export const getProductosPorCategoria = async (categoriaId) => {
-  const res = await fetch(`${BASE_URL}/productos/categoria/${categoriaId}`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return manejarRespuesta(res);
+  return api.get(`/productos/categoria/${categoriaId}`, { conAuth: false });
 };
 
 export const crearProducto = async (vendedorId, datos) => {
-  const res = await fetch(`${BASE_URL}/productos?vendedorId=${vendedorId}`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(datos),
-  });
-  return manejarRespuesta(res);
+  return api.post(`/productos?vendedorId=${vendedorId}`, datos);
 };
 
 export const editarProducto = async (id, vendedorId, datos) => {
-  const res = await fetch(`${BASE_URL}/productos/${id}?vendedorId=${vendedorId}`, {
-    method: 'PUT',
-    headers: getHeaders(),
-    body: JSON.stringify(datos),
-  });
-  return manejarRespuesta(res);
+  return api.put(`/productos/${id}?vendedorId=${vendedorId}`, datos);
 };
 
 export const eliminarProducto = async (id, vendedorId) => {
-  const res = await fetch(`${BASE_URL}/productos/${id}?vendedorId=${vendedorId}`, {
-    method: 'DELETE',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.delete(`/productos/${id}?vendedorId=${vendedorId}`);
 };
 
 export const aplicarDescuento = async (id, vendedorId, descuento) => {
-  const res = await fetch(
-    `${BASE_URL}/productos/${id}/descuento?vendedorId=${vendedorId}&descuento=${descuento}`,
-    { method: 'PATCH', headers: getHeaders() }
-  );
-  return manejarRespuesta(res);
+  return api.patch(`/productos/${id}/descuento?vendedorId=${vendedorId}&descuento=${descuento}`);
 };
 
 // ========================
@@ -174,10 +156,7 @@ export const aplicarDescuento = async (id, vendedorId, descuento) => {
 // ========================
 
 export const getCategorias = async () => {
-  const res = await fetch(`${BASE_URL}/categorias`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return manejarRespuesta(res);
+  return api.get('/categorias', { conAuth: false });
 };
 
 // ========================
@@ -185,35 +164,19 @@ export const getCategorias = async () => {
 // ========================
 
 export const getCarrito = async (usuarioId) => {
-  const res = await fetch(`${BASE_URL}/carrito?usuarioId=${usuarioId}`, {
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.get(`/carrito?usuarioId=${usuarioId}`);
 };
 
 export const agregarAlCarrito = async (usuarioId, productoId, cantidad = 1) => {
-  const res = await fetch(`${BASE_URL}/carrito/items?usuarioId=${usuarioId}`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ productoId, cantidad }),
-  });
-  return manejarRespuesta(res);
+  return api.post(`/carrito/items?usuarioId=${usuarioId}`, { productoId, cantidad });
 };
 
 export const modificarCantidadItem = async (itemId, usuarioId, cantidad) => {
-  const res = await fetch(
-    `${BASE_URL}/carrito/items/${itemId}?usuarioId=${usuarioId}&cantidad=${cantidad}`,
-    { method: 'PUT', headers: getHeaders() }
-  );
-  return manejarRespuesta(res);
+  return api.put(`/carrito/items/${itemId}?usuarioId=${usuarioId}&cantidad=${cantidad}`);
 };
 
 export const eliminarDelCarrito = async (itemId, usuarioId) => {
-  const res = await fetch(`${BASE_URL}/carrito/items/${itemId}?usuarioId=${usuarioId}`, {
-    method: 'DELETE',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.delete(`/carrito/items/${itemId}?usuarioId=${usuarioId}`);
 };
 
 // ========================
@@ -221,19 +184,11 @@ export const eliminarDelCarrito = async (itemId, usuarioId) => {
 // ========================
 
 export const hacerCheckout = async (usuarioId, datosCheckout) => {
-  const res = await fetch(`${BASE_URL}/ordenes/checkout?usuarioId=${usuarioId}`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(datosCheckout),
-  });
-  return manejarRespuesta(res);
+  return api.post(`/ordenes/checkout?usuarioId=${usuarioId}`, datosCheckout);
 };
 
 export const getOrdenes = async (usuarioId) => {
-  const res = await fetch(`${BASE_URL}/ordenes?usuarioId=${usuarioId}`, {
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.get(`/ordenes?usuarioId=${usuarioId}`);
 };
 
 // ========================
@@ -241,86 +196,41 @@ export const getOrdenes = async (usuarioId) => {
 // ========================
 
 export const getUsuarios = async () => {
-  const res = await fetch(`${BASE_URL}/usuarios`, {
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.get('/usuarios');
 };
 
 export const cambiarRolUsuario = async (id, nuevoRolId) => {
-  const res = await fetch(`${BASE_URL}/usuarios/${id}/rol?nuevoRolId=${nuevoRolId}`, {
-    method: 'PUT',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.put(`/usuarios/${id}/rol?nuevoRolId=${nuevoRolId}`);
 };
 
 export const eliminarUsuario = async (id) => {
-  const res = await fetch(`${BASE_URL}/usuarios/${id}`, {
-    method: 'DELETE',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.delete(`/usuarios/${id}`);
 };
 
 export const getTodasLasOrdenes = async () => {
-  const res = await fetch(`${BASE_URL}/ordenes/todas`, {
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.get('/ordenes/todas');
 };
 
 export const actualizarEstadoOrden = async (id, estado) => {
-  const res = await fetch(`${BASE_URL}/ordenes/${id}/estado?estado=${estado}`, {
-    method: 'PATCH',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.patch(`/ordenes/${id}/estado?estado=${estado}`);
 };
 
 export const crearCategoria = async (datos) => {
-  const res = await fetch(`${BASE_URL}/categorias`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(datos),
-  });
-  return manejarRespuesta(res);
+  return api.post('/categorias', datos);
 };
 
 export const eliminarCategoria = async (id) => {
-  const res = await fetch(`${BASE_URL}/categorias/${id}`, {
-    method: 'DELETE',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.delete(`/categorias/${id}`);
 };
 
 export const editarCategoria = async (id, datos) => {
-  const res = await fetch(`${BASE_URL}/categorias/${id}`, {
-    method: 'PUT',
-    headers: getHeaders(),
-    body: JSON.stringify(datos),
-  });
-  return manejarRespuesta(res);
+  return api.put(`/categorias/${id}`, datos);
 };
 
 export const convertirseEnVendedor = async () => {
-  const res = await fetch(`${BASE_URL}/usuarios/ser-vendedor`, {
-    method: 'PUT',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
+  return api.put('/usuarios/ser-vendedor');
 };
 
 export const enviarContacto = async (datosContacto) => {
-  const res = await fetch(`${BASE_URL}/contacto`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(datosContacto),
-  });
-  return manejarRespuesta(res);
+  return api.post('/contacto', datosContacto, { conAuth: false });
 };
-
-
-
-

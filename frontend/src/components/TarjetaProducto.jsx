@@ -62,6 +62,10 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
           type="button"
           onClick={(e) => {
             e.stopPropagation();
+            if (!auth?.token) {
+              navigate('/login');
+              return;
+            }
             dispatch(toggleFavorito(producto));
           }}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/10 flex items-center justify-center cursor-pointer text-on-surface hover:scale-105 transition-all duration-300 shadow-sm"

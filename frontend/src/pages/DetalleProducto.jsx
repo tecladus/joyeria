@@ -296,7 +296,13 @@ function DetalleProducto() {
                       {producto && (
                         <button
                           type="button"
-                          onClick={() => dispatch(toggleFavorito(producto))}
+                          onClick={() => {
+                            if (!auth?.token) {
+                              navigate('/login');
+                              return;
+                            }
+                            dispatch(toggleFavorito(producto));
+                          }}
                           className="px-6 border border-outline-variant/35 hover:border-primary transition-all duration-300 flex items-center justify-center cursor-pointer rounded-sm text-on-surface hover:text-error bg-transparent"
                           title={esFavorito ? 'Quitar de Favoritos' : 'Añadir a Favoritos'}
                         >

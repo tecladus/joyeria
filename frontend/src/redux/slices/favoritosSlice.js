@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const getFavoritosFromStorage = (userId) => {
-  const key = `favoritos_${userId || 'guest'}`;
+  if (!userId) return [];
+  const key = `favoritos_${userId}`;
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : [];
@@ -11,7 +12,8 @@ const getFavoritosFromStorage = (userId) => {
 };
 
 const saveFavoritosToStorage = (userId, list) => {
-  const key = `favoritos_${userId || 'guest'}`;
+  if (!userId) return;
+  const key = `favoritos_${userId}`;
   try {
     localStorage.setItem(key, JSON.stringify(list));
   } catch (e) {
@@ -22,7 +24,7 @@ const saveFavoritosToStorage = (userId, list) => {
 const favoritosSlice = createSlice({
   name: 'favoritos',
   initialState: {
-    items: getFavoritosFromStorage(localStorage.getItem('idUsuario') || 'guest')
+    items: getFavoritosFromStorage(localStorage.getItem('idUsuario'))
   },
   reducers: {
     inicializarFavoritos: (state, action) => {
@@ -31,13 +33,15 @@ const favoritosSlice = createSlice({
     },
     toggleFavorito: (state, action) => {
       const producto = action.payload;
+      const userId = localStorage.getItem('idUsuario');
+      if (!userId) return;
+
       const index = state.items.findIndex(item => item.idProducto === producto.idProducto);
       if (index >= 0) {
         state.items.splice(index, 1);
       } else {
         state.items.push(producto);
       }
-      const userId = localStorage.getItem('idUsuario') || 'guest';
       saveFavoritosToStorage(userId, state.items);
     },
     limpiarFavoritos: (state) => {
