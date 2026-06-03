@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import {
-  getProductos,
-  getCategorias,
-  crearProducto,
-  editarProducto,
-  eliminarProducto,
-  aplicarDescuento,
-} from '../services/api';
+import { useState, useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useModal } from '../components/ModalContext';
+import {
+  fetchProductos,
+  crearNuevoProducto,
+  editarProductoExistente,
+  eliminarProductoExistente,
+  aplicarDescuentoProducto
+} from '../redux/slices/productosSlice';
+import { fetchCategorias } from '../redux/slices/categoriasSlice';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -24,11 +24,20 @@ const FORM_VACIO = {
 };
 
 function PanelVendedor() {
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [cargando, setCargando] = useState(true);
+
+  const todosLosProductos = useSelector((state) => state.productos.items || []);
+  const { items: categorias } = useSelector((state) => state.categorias);
+  const cargandoProductos = useSelector((state) => state.productos.cargando);
+  const cargandoCategorias = useSelector((state) => state.categorias.cargando);
+  const cargando = cargandoProductos || cargandoCategorias;
+
+  const productos = useMemo(() => {
+    return todosLosProductos.filter(p => Number(p.idVendedor) === Number(auth.idUsuario));
+  }, [todosLosProductos, auth.idUsuario]);
+
   const [form, setForm] = useState(FORM_VACIO);
   const [modoEdicion, setModoEdicion] = useState(null);
   const [error, setError] = useState('');
@@ -39,28 +48,11 @@ function PanelVendedor() {
   const [modalDescuento, setModalDescuento] = useState(null);
   const [valorDescuento, setValorDescuento] = useState('');
 
-  // Carga categorías al montar
+  // Carga categorías y productos al montar
   useEffect(() => {
-    getCategorias().then(setCategorias).catch(() => {});
-  }, []);
-
-  // Carga los productos creados por este usuario
-  const cargarProductos = useCallback(async () => {
-    setCargando(true);
-    try {
-      const todos = await getProductos();
-      const creadosPorMi = todos ? todos.filter(p => Number(p.idVendedor) === Number(auth.idUsuario)) : [];
-      setProductos(creadosPorMi);
-    } catch {
-      setProductos([]);
-    } finally {
-      setCargando(false);
-    }
-  }, [auth.idUsuario]);
-
-  useEffect(() => {
-    cargarProductos();
-  }, [cargarProductos]);
+    dispatch(fetchCategorias());
+    dispatch(fetchProductos());
+  }, [dispatch]);
 
   const mostrarExito = (msg) => {
     setExito(msg);
@@ -97,15 +89,14 @@ function PanelVendedor() {
     };
     try {
       if (modoEdicion) {
-        await editarProducto(modoEdicion, auth.idUsuario, datos);
+        await dispatch(editarProductoExistente({ id: modoEdicion, vendedorId: auth.idUsuario, datos })).unwrap();
         mostrarExito('Producto actualizado correctamente.');
       } else {
-        await crearProducto(auth.idUsuario, datos);
+        await dispatch(crearNuevoProducto({ vendedorId: auth.idUsuario, datos })).unwrap();
         mostrarExito('Producto creado correctamente.');
       }
       setForm(FORM_VACIO);
       setModoEdicion(null);
-      await cargarProductos();
     } catch (err) {
       mostrarError(err.message || 'Error al guardar el producto.');
     } finally {
@@ -137,9 +128,8 @@ function PanelVendedor() {
     const confirmado = await showConfirm(`¿Eliminar "${producto.nombre}"? Esta acción no se puede deshacer.`, 'Eliminar Joya');
     if (!confirmado) return;
     try {
-      await eliminarProducto(producto.idProducto, auth.idUsuario);
+      await dispatch(eliminarProductoExistente({ id: producto.idProducto, vendedorId: auth.idUsuario })).unwrap();
       mostrarExito('Producto eliminado.');
-      await cargarProductos();
     } catch (err) {
       mostrarError(err.message || 'Error al eliminar el producto.');
     }
@@ -157,10 +147,9 @@ function PanelVendedor() {
       return;
     }
     try {
-      await aplicarDescuento(modalDescuento.idProducto, auth.idUsuario, descuento);
+      await dispatch(aplicarDescuentoProducto({ id: modalDescuento.idProducto, vendedorId: auth.idUsuario, descuento })).unwrap();
       setModalDescuento(null);
       mostrarExito(`Descuento de ${descuento}% aplicado.`);
-      await cargarProductos();
     } catch (err) {
       mostrarError(err.message || 'Error al aplicar el descuento.');
     }

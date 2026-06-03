@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { 
-  getUsuarios, cambiarRolUsuario, eliminarUsuario,
-  getTodasLasOrdenes, actualizarEstadoOrden,
-  getProductos, eliminarProducto, editarProducto,
-  getCategorias, crearCategoria, eliminarCategoria, editarCategoria
-} from '../services/api';
+import { useSelector, useDispatch } from 'react-redux';
 import { useModal } from '../components/ModalContext';
+import { fetchUsuarios, cambiarRolUsuarioExistente, eliminarUsuarioExistente } from '../redux/slices/usuariosSlice';
+import { fetchTodasLasOrdenes, actualizarEstadoOrdenExistente } from '../redux/slices/ordenesSlice';
+import { fetchProductos, editarProductoExistente, eliminarProductoExistente } from '../redux/slices/productosSlice';
+import { fetchCategorias, crearNuevaCategoria, editarCategoriaExistente, eliminarCategoriaExistente } from '../redux/slices/categoriasSlice';
 
 const TABS = [
   { id: 'metrics', label: 'Métricas' },
@@ -24,18 +22,20 @@ const ROLES = [
 ];
 
 function PanelAdmin() {
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('metrics');
-  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
 
-  // Datos
-  const [usuarios, setUsuarios] = useState([]);
-  const [ordenes, setOrdenes] = useState([]);
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  // Consumir datos de Redux Slices
+  const { items: usuarios, cargando: cargandoUsuarios } = useSelector((state) => state.usuarios);
+  const { todasLasOrdenes: ordenes, cargando: cargandoOrdenes } = useSelector((state) => state.ordenes);
+  const { items: productos, cargando: cargandoProductos } = useSelector((state) => state.productos);
+  const { items: categorias, cargando: cargandoCategorias } = useSelector((state) => state.categorias);
+
+  const cargando = cargandoUsuarios || cargandoOrdenes || cargandoProductos || cargandoCategorias;
 
   // Formulario Categoría
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
@@ -59,36 +59,28 @@ function PanelAdmin() {
   };
 
   const cargarDatos = async () => {
-    setCargando(true);
     setError('');
     try {
-      const [usersData, ordersData, productsData, catsData] = await Promise.all([
-        getUsuarios(),
-        getTodasLasOrdenes(),
-        getProductos(),
-        getCategorias()
+      await Promise.all([
+        dispatch(fetchUsuarios()).unwrap(),
+        dispatch(fetchTodasLasOrdenes()).unwrap(),
+        dispatch(fetchProductos()).unwrap(),
+        dispatch(fetchCategorias()).unwrap()
       ]);
-      setUsuarios(usersData || []);
-      setOrdenes(ordersData || []);
-      setProductos(productsData || []);
-      setCategorias(catsData || []);
     } catch (err) {
-      setError(err.message || 'Error al cargar los datos administrativos.');
-    } finally {
-      setCargando(false);
+      setError(err || 'Error al cargar los datos administrativos.');
     }
   };
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+  }, [dispatch]);
 
   // Handlers Usuarios
   const handleCambiarRol = async (id, rolId) => {
     try {
-      await cambiarRolUsuario(id, rolId);
+      await dispatch(cambiarRolUsuarioExistente({ id, nuevoRolId: rolId })).unwrap();
       mostrarToast('Rol de usuario actualizado con éxito');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al cambiar rol del usuario.');
     }
@@ -98,9 +90,8 @@ function PanelAdmin() {
     const confirmado = await showConfirm('¿Está seguro de que desea eliminar este usuario de forma permanente?', 'Eliminar Usuario');
     if (!confirmado) return;
     try {
-      await eliminarUsuario(id);
+      await dispatch(eliminarUsuarioExistente(id)).unwrap();
       mostrarToast('Usuario eliminado correctamente');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al eliminar usuario.');
     }
@@ -111,9 +102,8 @@ function PanelAdmin() {
     const confirmado = await showConfirm('¿Desea eliminar este producto del catálogo?', 'Eliminar Producto');
     if (!confirmado) return;
     try {
-      await eliminarProducto(id, auth.idUsuario);
+      await dispatch(eliminarProductoExistente({ id, vendedorId: auth.idUsuario })).unwrap();
       mostrarToast('Producto eliminado del catálogo');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al eliminar producto.');
     }
@@ -142,10 +132,9 @@ function PanelAdmin() {
         imagenUrl: editImagenUrl || null,
         categoriaId: Number(editIdCategoria)
       };
-      await editarProducto(prodAEditar.idProducto, auth.idUsuario, datosActualizados);
+      await dispatch(editarProductoExistente({ id: prodAEditar.idProducto, vendedorId: auth.idUsuario, datos: datosActualizados })).unwrap();
       mostrarToast('Producto modificado correctamente');
       setProdAEditar(null);
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al actualizar producto.');
     }
@@ -154,9 +143,8 @@ function PanelAdmin() {
   // Handlers Órdenes
   const handleActualizarEstadoOrden = async (id, nuevoEstado) => {
     try {
-      await actualizarEstadoOrden(id, nuevoEstado);
+      await dispatch(actualizarEstadoOrdenExistente({ id, estado: nuevoEstado })).unwrap();
       mostrarToast('Estado de la orden actualizado');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al actualizar estado de la orden.');
     }
@@ -167,10 +155,9 @@ function PanelAdmin() {
     e.preventDefault();
     if (!nuevaCatNombre.trim()) return;
     try {
-      await crearCategoria({ nombre: nuevaCatNombre.trim() });
+      await dispatch(crearNuevaCategoria({ nombre: nuevaCatNombre.trim() })).unwrap();
       mostrarToast('Nueva categoría creada');
       setNuevaCatNombre('');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al crear categoría.');
     }
@@ -180,9 +167,8 @@ function PanelAdmin() {
     const confirmado = await showConfirm('¿Está seguro de que desea eliminar esta categoría?', 'Eliminar Categoría');
     if (!confirmado) return;
     try {
-      await eliminarCategoria(id);
+      await dispatch(eliminarCategoriaExistente(id)).unwrap();
       mostrarToast('Categoría eliminada');
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al eliminar categoría.');
     }
@@ -191,10 +177,9 @@ function PanelAdmin() {
   const handleGuardarCategoria = async (id) => {
     if (!editCatNombre.trim()) return;
     try {
-      await editarCategoria(id, { nombre: editCatNombre.trim() });
+      await dispatch(editarCategoriaExistente({ id, datos: { nombre: editCatNombre.trim() } })).unwrap();
       mostrarToast('Categoría actualizada correctamente');
       setCatAEditar(null);
-      cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al actualizar la categoría.');
     }

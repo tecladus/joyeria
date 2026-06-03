@@ -1,15 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { getOrdenes } from '../services/api';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchOrdenes } from '../redux/slices/ordenesSlice';
 
 function HistorialCompras() {
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const [ordenes, setOrdenes] = useState([]);
-  const [cargando, setCargando] = useState(true);
+  const { items: rawOrdenes, cargando, error: errorOrdenes } = useSelector((state) => state.ordenes);
+  
   const [error, setError] = useState('');
   const [ordenAbierta, setOrdenAbierta] = useState(null);
   const [infoMessage, setInfoMessage] = useState('');
+
+  const ordenes = useMemo(() => {
+    return [...rawOrdenes].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  }, [rawOrdenes]);
+
+  // Sincronizar error de Redux con estado local
+  useEffect(() => {
+    if (errorOrdenes) {
+      setError(errorOrdenes);
+    }
+  }, [errorOrdenes]);
 
   // Auto-cerrar mensaje de éxito después de 5 segundos
   useEffect(() => {
@@ -33,21 +45,9 @@ function HistorialCompras() {
 
   useEffect(() => {
     if (auth?.idUsuario) {
-      setCargando(true);
-      getOrdenes(auth.idUsuario)
-        .then((data) => {
-          // Ordenar de más recientes a más viejas
-          const sorted = (data || []).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-          setOrdenes(sorted);
-        })
-        .catch((err) => {
-          setError(err.message || 'No se pudieron cargar tus compras.');
-        })
-        .finally(() => {
-          setCargando(false);
-        });
+      dispatch(fetchOrdenes(auth.idUsuario));
     }
-  }, [auth]);
+  }, [auth?.idUsuario, dispatch]);
 
   const toggleDetalle = (id) => {
     setOrdenAbierta(ordenAbierta === id ? null : id);

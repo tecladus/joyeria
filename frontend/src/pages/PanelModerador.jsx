@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { 
-  getUsuarios,
-  getTodasLasOrdenes, actualizarEstadoOrden,
-  getProductos, eliminarProducto,
-  getCategorias
-} from '../services/api';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchUsuarios } from '../redux/slices/usuariosSlice';
+import { fetchTodasLasOrdenes, actualizarEstadoOrdenExistente } from '../redux/slices/ordenesSlice';
+import { fetchProductos, eliminarProductoExistente } from '../redux/slices/productosSlice';
+import { fetchCategorias } from '../redux/slices/categoriasSlice';
 import { useModal } from '../components/ModalContext';
 
 const TABS = [
@@ -16,18 +14,20 @@ const TABS = [
 ];
 
 function PanelModerador() {
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('users');
-  const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
 
-  // Datos
-  const [usuarios, setUsuarios] = useState([]);
-  const [ordenes, setOrdenes] = useState([]);
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  // Consumir datos de Redux Slices
+  const { items: usuarios, cargando: cargandoUsuarios } = useSelector((state) => state.usuarios);
+  const { todasLasOrdenes: ordenes, cargando: cargandoOrdenes } = useSelector((state) => state.ordenes);
+  const { items: productos, cargando: cargandoProductos } = useSelector((state) => state.productos);
+  const { items: categorias, cargando: cargandoCategorias } = useSelector((state) => state.categorias);
+
+  const cargando = cargandoUsuarios || cargandoOrdenes || cargandoProductos || cargandoCategorias;
 
   const mostrarToast = (mensaje) => {
     setToast(mensaje);
@@ -35,29 +35,22 @@ function PanelModerador() {
   };
 
   const cargarDatos = async () => {
-    setCargando(true);
     setError('');
     try {
-      const [usersData, ordersData, productsData, catsData] = await Promise.all([
-        getUsuarios(),
-        getTodasLasOrdenes(),
-        getProductos(),
-        getCategorias()
+      await Promise.all([
+        dispatch(fetchUsuarios()).unwrap(),
+        dispatch(fetchTodasLasOrdenes()).unwrap(),
+        dispatch(fetchProductos()).unwrap(),
+        dispatch(fetchCategorias()).unwrap()
       ]);
-      setUsuarios(usersData || []);
-      setOrdenes(ordersData || []);
-      setProductos(productsData || []);
-      setCategorias(catsData || []);
     } catch (err) {
-      setError(err.message || 'Error al cargar los datos de moderación.');
-    } finally {
-      setCargando(false);
+      setError(err || 'Error al cargar los datos de moderación.');
     }
   };
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+  }, [dispatch]);
 
   // Handlers Catálogo (Solo eliminación por moderación)
   const handleEliminarProducto = async (id) => {
@@ -67,22 +60,20 @@ function PanelModerador() {
     );
     if (!confirmado) return;
     try {
-      await eliminarProducto(id, auth.idUsuario);
+      await dispatch(eliminarProductoExistente({ id, vendedorId: auth.idUsuario })).unwrap();
       mostrarToast('Pieza removida del catálogo por moderador');
-      cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al moderar producto.');
+      setError(err || 'Error al moderar producto.');
     }
   };
 
   // Handlers Órdenes (Actualización de estado operativa)
   const handleActualizarEstadoOrden = async (id, nuevoEstado) => {
     try {
-      await actualizarEstadoOrden(id, nuevoEstado);
+      await dispatch(actualizarEstadoOrdenExistente({ id, estado: nuevoEstado })).unwrap();
       mostrarToast('Estado de la orden actualizado');
-      cargarDatos();
     } catch (err) {
-      setError(err.message || 'Error al actualizar estado de la orden.');
+      setError(err || 'Error al actualizar estado de la orden.');
     }
   };
 

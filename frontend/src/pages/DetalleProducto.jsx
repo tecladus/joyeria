@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getProductoPorId, getProductos, agregarAlCarrito } from '../services/api';
+import { agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 import { setCantidadCarrito } from '../redux/slices/carritoSlice';
 import { toggleFavorito } from '../redux/slices/favoritosSlice';
+import { fetchProductoPorId, fetchProductos, limpiarItemSeleccionado } from '../redux/slices/productosSlice';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -30,43 +31,41 @@ function DetalleProducto() {
   const favoritos = useSelector((state) => state.favoritos.items || []);
   const deviceMultiplier = useDeviceMultiplier();
 
-  const [producto, setProducto] = useState(null);
+  const { itemSeleccionado: producto, cargando, error, items: todosLosProductos } = useSelector((state) => state.productos);
   const esFavorito = producto && favoritos.some((item) => item.idProducto === producto.idProducto);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
   const [agregando, setAgregando] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
   const [tallaSeleccionada, setTallaSeleccionada] = useState(null);
   const [imagenActiva, setImagenActiva] = useState('');
-  const [recomendados, setRecomendados] = useState([]);
   const [mostrarGuiaTallas, setMostrarGuiaTallas] = useState(false);
+
+  const recomendados = useMemo(() => {
+    return (todosLosProductos || [])
+      .filter((p) => p.idProducto !== parseInt(id, 10))
+      .slice(0, 4);
+  }, [todosLosProductos, id]);
 
   // Carga el producto por ID
   useEffect(() => {
-    setCargando(true);
-    setError('');
+    dispatch(fetchProductoPorId(id));
     setTallaSeleccionada(null);
-    getProductoPorId(id)
-      .then((data) => {
-        setProducto(data);
-        if (data && data.imagenUrl) {
-          setImagenActiva(data.imagenUrl);
-        }
-      })
-      .catch((err) => setError(err.message || 'Producto no encontrado.'))
-      .finally(() => setCargando(false));
-  }, [id]);
+    return () => {
+      dispatch(limpiarItemSeleccionado());
+    };
+  }, [id, dispatch]);
 
-  // Carga recomendados
+  // Carga recomendados/productos
   useEffect(() => {
-    getProductos()
-      .then((datos) => {
-        const filtrados = (datos || []).filter((p) => p.idProducto !== parseInt(id, 10));
-        setRecomendados(filtrados.slice(0, 4));
-      })
-      .catch(() => {});
-  }, [id]);
+    dispatch(fetchProductos());
+  }, [dispatch]);
+
+  // Sincronizar imagenActiva
+  useEffect(() => {
+    if (producto && producto.imagenUrl) {
+      setImagenActiva(producto.imagenUrl);
+    }
+  }, [producto]);
 
   const handleAgregarCarrito = async (productoIdInput) => {
     if (!auth?.token || !auth?.idUsuario) {

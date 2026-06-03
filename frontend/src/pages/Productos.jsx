@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getProductos, getCategorias, agregarAlCarrito } from '../services/api';
+import { agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
 import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { fetchProductos } from '../redux/slices/productosSlice';
+import { fetchCategorias } from '../redux/slices/categoriasSlice';
 
 const MATERIALES = [
   { id: '18K Yellow Gold', label: 'Oro Amarillo 18K' },
@@ -15,10 +17,11 @@ const MATERIALES = [
 function Productos() {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const [todosLosProductos, setTodosLosProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState('');
+  const { items: todosLosProductos, cargando: cargandoProductos, error: errorProductos } = useSelector((state) => state.productos);
+  const { items: categorias, cargando: cargandoCategorias, error: errorCategorias } = useSelector((state) => state.categorias);
+
+  const cargando = cargandoProductos || cargandoCategorias;
+  const error = errorProductos || errorCategorias;
   const [toast, setToast] = useState('');
 
   // Sincronización de categoría activa y búsqueda con Query Params de React Router
@@ -55,27 +58,13 @@ function Productos() {
 
   // Carga todas las categorías al montar
   useEffect(() => {
-    getCategorias()
-      .then(setCategorias)
-      .catch(() => {});
-  }, []);
+    dispatch(fetchCategorias());
+  }, [dispatch]);
 
   // Carga TODOS los productos al montar para filtrar client-side
   useEffect(() => {
-    const cargarTodosLosProductos = async () => {
-      setCargando(true);
-      setError('');
-      try {
-        const datos = await getProductos();
-        setTodosLosProductos(datos || []);
-      } catch (err) {
-        setError(err.message || 'No se pudieron cargar los productos.');
-      } finally {
-        setCargando(false);
-      }
-    };
-    cargarTodosLosProductos();
-  }, []);
+    dispatch(fetchProductos());
+  }, [dispatch]);
 
   // Resetear página activa cuando cambian los filtros
   useEffect(() => {
