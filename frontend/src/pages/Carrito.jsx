@@ -32,6 +32,18 @@ function Carrito({ auth, onActualizarCarrito }) {
   });
   const [transferenciaConfirmada, setTransferenciaConfirmada] = useState(false);
 
+  // Pre-cargar datos de la cuenta logueada en el formulario de envío
+  useEffect(() => {
+    if (auth) {
+      setDatosEnvio((prev) => ({
+        ...prev,
+        nombreCompleto: prev.nombreCompleto || `${auth.nombre || ''} ${auth.apellido || ''}`.trim(),
+        direccion: prev.direccion || auth.direccion || '',
+        telefono: prev.telefono || auth.telefono || '',
+      }));
+    }
+  }, [auth]);
+
   const cargarCarrito = useCallback(async () => {
     setCargando(true);
     setError('');

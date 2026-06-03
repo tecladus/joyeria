@@ -122,6 +122,8 @@ public class UsuarioService implements UserDetailsService {
                 .username(usuario.getNombreUsuario())
                 .email(usuario.getEmail())
                 .rol(usuario.getRol().getNombre())
+                .direccion(usuario.getDireccion())
+                .telefono(usuario.getTelefono())
                 .build();
     }
 

@@ -17,4 +17,6 @@ public class AuthResponse {
     private String username;
     private String email;
     private String rol;
+    private String direccion;
+    private String telefono;
 }

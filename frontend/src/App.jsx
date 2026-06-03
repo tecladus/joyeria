@@ -24,6 +24,10 @@ function App() {
     token: localStorage.getItem('token'),
     idUsuario: localStorage.getItem('idUsuario'),
     rol: localStorage.getItem('rol'),
+    nombre: localStorage.getItem('nombre') || '',
+    apellido: localStorage.getItem('apellido') || '',
+    direccion: localStorage.getItem('direccion') || '',
+    telefono: localStorage.getItem('telefono') || '',
   });
 
   // Contador de items en el carrito para el badge del NavBar
@@ -47,14 +51,38 @@ function App() {
     localStorage.setItem('token', datos.token);
     localStorage.setItem('idUsuario', String(datos.idUsuario));
     localStorage.setItem('rol', datos.rol);
-    setAuth({ token: datos.token, idUsuario: String(datos.idUsuario), rol: datos.rol });
+    localStorage.setItem('nombre', datos.nombre || '');
+    localStorage.setItem('apellido', datos.apellido || '');
+    localStorage.setItem('direccion', datos.direccion || '');
+    localStorage.setItem('telefono', datos.telefono || '');
+    setAuth({
+      token: datos.token,
+      idUsuario: String(datos.idUsuario),
+      rol: datos.rol,
+      nombre: datos.nombre || '',
+      apellido: datos.apellido || '',
+      direccion: datos.direccion || '',
+      telefono: datos.telefono || '',
+    });
   };
 
   const cerrarSesion = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('idUsuario');
     localStorage.removeItem('rol');
-    setAuth({ token: null, idUsuario: null, rol: null });
+    localStorage.removeItem('nombre');
+    localStorage.removeItem('apellido');
+    localStorage.removeItem('direccion');
+    localStorage.removeItem('telefono');
+    setAuth({
+      token: null,
+      idUsuario: null,
+      rol: null,
+      nombre: '',
+      apellido: '',
+      direccion: '',
+      telefono: '',
+    });
     setCantidadCarrito(0);
   };
 
