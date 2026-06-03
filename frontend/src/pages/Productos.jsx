@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { getProductos, getCategorias, agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
+import { setCantidadCarrito } from '../redux/slices/carritoSlice';
 
 const MATERIALES = [
   { id: '18K Yellow Gold', label: 'Oro Amarillo 18K' },
@@ -10,7 +12,9 @@ const MATERIALES = [
   { id: 'Ethical Diamonds', label: 'Diamantes Éticos' }
 ];
 
-function Productos({ auth, onActualizarCarrito }) {
+function Productos() {
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
   const [todosLosProductos, setTodosLosProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -89,7 +93,7 @@ function Productos({ auth, onActualizarCarrito }) {
     try {
       const carritoActualizado = await agregarAlCarrito(auth.idUsuario, productoId, 1);
       const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      onActualizarCarrito(nuevoTotal);
+      dispatch(setCantidadCarrito(nuevoTotal));
       mostrarToast('Producto agregado al carrito con éxito');
     } catch (err) {
       mostrarToast(err.message || 'Error al agregar al carrito');
@@ -377,7 +381,6 @@ function Productos({ auth, onActualizarCarrito }) {
                       <TarjetaProducto
                         key={producto.idProducto}
                         producto={producto}
-                        auth={auth}
                         onAgregarCarrito={handleAgregarCarrito}
                       />
                     ))}

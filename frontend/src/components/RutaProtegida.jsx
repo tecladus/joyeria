@@ -1,7 +1,10 @@
 import { Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 /* Protege rutas que requieren autenticación y opcionalmente un rol específico. */
-function RutaProtegida({ auth, children, rolRequerido }) {
+function RutaProtegida({ children, rolRequerido }) {
+  const auth = useSelector((state) => state.auth);
+
   if (!auth.token) {
     return <Navigate to="/login" replace />;
   }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { getProductoPorId, getProductos, agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
+import { setCantidadCarrito } from '../redux/slices/carritoSlice';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -19,9 +21,11 @@ const CATEGORY_TRANSLATIONS = {
   'Aros': 'Earrings'
 };
 
-function DetalleProducto({ auth, onActualizarCarrito }) {
+function DetalleProducto() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
   const deviceMultiplier = useDeviceMultiplier();
 
   const [producto, setProducto] = useState(null);
@@ -85,7 +89,7 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
     try {
       const carritoActualizado = await agregarAlCarrito(auth.idUsuario, targetProductoId, 1);
       const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      onActualizarCarrito(nuevoTotal);
+      dispatch(setCantidadCarrito(nuevoTotal));
       setMensajeExito('Producto agregado al carrito con éxito');
       setTimeout(() => setMensajeExito(''), 3000);
     } catch (err) {
@@ -375,7 +379,6 @@ function DetalleProducto({ auth, onActualizarCarrito }) {
                     <TarjetaProducto
                       key={prod.idProducto}
                       producto={prod}
-                      auth={auth}
                       onAgregarCarrito={handleAgregarCarrito}
                     />
                   ))}

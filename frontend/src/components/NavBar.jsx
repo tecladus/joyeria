@@ -1,12 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { convertirseEnVendedor } from '../services/api';
 import { useModal } from './ModalContext';
+import { iniciarSesion, cerrarSesion } from '../redux/slices/authSlice';
 
-function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
+function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showConfirm, showAlert } = useModal();
+  const dispatch = useDispatch();
+
+  const auth = useSelector((state) => state.auth);
+  const cantidadCarrito = useSelector((state) => state.carrito.cantidadCarrito);
+
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
   const dropdownRef = useRef(null);
@@ -18,7 +25,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
   const esModerador = auth.rol === 'MODERATOR';
 
   const handleCerrarSesion = () => {
-    onCerrarSesion();
+    dispatch(cerrarSesion());
     setMenuMovilAbierto(false);
     setDropdownAbierto(false);
     navigate('/login');
@@ -32,7 +39,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
     if (!confirmado) return;
     try {
       const datos = await convertirseEnVendedor();
-      onActualizarAuth(datos);
+      dispatch(iniciarSesion(datos));
       setDropdownAbierto(false);
       setMenuMovilAbierto(false);
       navigate('/vendedor');

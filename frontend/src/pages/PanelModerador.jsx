@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   getUsuarios,
   getTodasLasOrdenes, actualizarEstadoOrden,
@@ -14,7 +15,8 @@ const TABS = [
   { id: 'categories', label: 'Categorías' }
 ];
 
-function PanelModerador({ auth }) {
+function PanelModerador() {
+  const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('users');
   const [cargando, setCargando] = useState(false);

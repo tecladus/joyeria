@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { getCarrito, modificarCantidadItem, eliminarDelCarrito, hacerCheckout } from '../services/api';
 import CarritoItem from '../components/CarritoItem';
+import { setCantidadCarrito } from '../redux/slices/carritoSlice';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
 
-function Carrito({ auth, onActualizarCarrito }) {
+function Carrito() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
   const [carrito, setCarrito] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [operando, setOperando] = useState(false);
@@ -51,13 +55,13 @@ function Carrito({ auth, onActualizarCarrito }) {
       const datos = await getCarrito(auth.idUsuario);
       setCarrito(datos);
       const total = datos?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      onActualizarCarrito(total);
+      dispatch(setCantidadCarrito(total));
     } catch (err) {
       setError(err.message || 'No se pudo cargar el carrito.');
     } finally {
       setCargando(false);
     }
-  }, [auth.idUsuario, onActualizarCarrito]);
+  }, [auth.idUsuario, dispatch]);
 
   useEffect(() => {
     cargarCarrito();
@@ -71,7 +75,7 @@ function Carrito({ auth, onActualizarCarrito }) {
       const actualizado = await modificarCantidadItem(itemId, auth.idUsuario, nuevaCantidad);
       setCarrito(actualizado);
       const total = actualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      onActualizarCarrito(total);
+      dispatch(setCantidadCarrito(total));
     } catch (err) {
       setError(err.message || 'Error al modificar la cantidad.');
     } finally {
@@ -87,7 +91,7 @@ function Carrito({ auth, onActualizarCarrito }) {
       if (actualizado) {
         setCarrito(actualizado);
         const total = actualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-        onActualizarCarrito(total);
+        dispatch(setCantidadCarrito(total));
       } else {
         await cargarCarrito();
       }
@@ -130,7 +134,7 @@ function Carrito({ auth, onActualizarCarrito }) {
     try {
       await hacerCheckout(auth.idUsuario);
       setCheckoutExitoso(true);
-      onActualizarCarrito(0);
+      dispatch(setCantidadCarrito(0));
     } catch (err) {
       setError(err.message || 'Error al procesar el pedido.');
     } finally {

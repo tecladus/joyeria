@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 
 /* Formatea un número como precio en dólares */
@@ -12,8 +13,9 @@ const precioConDescuento = (precio, descuento) => {
   return precio * (1 - descuento / 100);
 };
 
-function TarjetaProducto({ producto, auth, onAgregarCarrito }) {
+function TarjetaProducto({ producto, onAgregarCarrito }) {
   const navigate = useNavigate();
+  const auth = useSelector((state) => state.auth);
   const [errorImagen, setErrorImagen] = useState(false);
   const deviceMultiplier = useDeviceMultiplier();
   const puedeAgregarAlCarrito = !!auth?.token;

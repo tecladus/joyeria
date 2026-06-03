@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { getOrdenes } from '../services/api';
 
-function HistorialCompras({ auth }) {
+function HistorialCompras() {
+  const auth = useSelector((state) => state.auth);
   const [ordenes, setOrdenes] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');

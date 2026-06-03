@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import {
   getProductos,
   getCategorias,
@@ -22,7 +23,8 @@ const FORM_VACIO = {
   categoriaId: '',
 };
 
-function PanelVendedor({ auth }) {
+function PanelVendedor() {
+  const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);

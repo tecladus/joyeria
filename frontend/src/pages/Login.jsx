@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { loginUsuario } from '../services/api';
+import { iniciarSesion } from '../redux/slices/authSlice';
 
-function Login({ onIniciarSesion }) {
+function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -22,7 +25,7 @@ function Login({ onIniciarSesion }) {
     setCargando(true);
     try {
       const datos = await loginUsuario(form.email, form.password);
-      onIniciarSesion(datos);
+      dispatch(iniciarSesion(datos));
       navigate('/productos');
     } catch (err) {
       setError(err.message || 'Credenciales incorrectas. Intenta de nuevo.');

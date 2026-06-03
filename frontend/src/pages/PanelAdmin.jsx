@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { 
   getUsuarios, cambiarRolUsuario, eliminarUsuario,
   getTodasLasOrdenes, actualizarEstadoOrden,
@@ -22,7 +23,8 @@ const ROLES = [
   { id: 4, label: 'MODERATOR' }
 ];
 
-function PanelAdmin({ auth }) {
+function PanelAdmin() {
+  const auth = useSelector((state) => state.auth);
   const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('metrics');
   const [cargando, setCargando] = useState(false);
