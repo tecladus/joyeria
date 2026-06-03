@@ -20,6 +20,7 @@ const initialState = {
   rol: localStorage.getItem('rol') || null,
   nombre: localStorage.getItem('nombre') || '',
   apellido: localStorage.getItem('apellido') || '',
+  email: localStorage.getItem('email') || '',
   direccion: localStorage.getItem('direccion') || '',
   telefono: localStorage.getItem('telefono') || '',
   cargandoPerfil: false,
@@ -37,6 +38,7 @@ const authSlice = createSlice({
       state.rol = datos.rol;
       state.nombre = datos.nombre || '';
       state.apellido = datos.apellido || '';
+      state.email = datos.email || '';
       state.direccion = datos.direccion || '';
       state.telefono = datos.telefono || '';
 
@@ -45,6 +47,7 @@ const authSlice = createSlice({
       localStorage.setItem('rol', datos.rol);
       localStorage.setItem('nombre', datos.nombre || '');
       localStorage.setItem('apellido', datos.apellido || '');
+      localStorage.setItem('email', datos.email || '');
       localStorage.setItem('direccion', datos.direccion || '');
       localStorage.setItem('telefono', datos.telefono || '');
     },
@@ -54,6 +57,7 @@ const authSlice = createSlice({
       state.rol = null;
       state.nombre = '';
       state.apellido = '';
+      state.email = '';
       state.direccion = '';
       state.telefono = '';
 
@@ -62,6 +66,7 @@ const authSlice = createSlice({
       localStorage.removeItem('rol');
       localStorage.removeItem('nombre');
       localStorage.removeItem('apellido');
+      localStorage.removeItem('email');
       localStorage.removeItem('direccion');
       localStorage.removeItem('telefono');
     },
@@ -77,11 +82,13 @@ const authSlice = createSlice({
         state.cargandoPerfil = false;
         state.nombre = perfil.nombre || '';
         state.apellido = perfil.apellido || '';
+        state.email = perfil.email || '';
         state.direccion = perfil.direccion || '';
         state.telefono = perfil.telefono || '';
 
         localStorage.setItem('nombre', perfil.nombre || '');
         localStorage.setItem('apellido', perfil.apellido || '');
+        localStorage.setItem('email', perfil.email || '');
         localStorage.setItem('direccion', perfil.direccion || '');
         localStorage.setItem('telefono', perfil.telefono || '');
       })

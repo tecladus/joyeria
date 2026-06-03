@@ -26,6 +26,26 @@ function HistorialCompras() {
     }
   };
 
+  // Auto-cerrar mensaje de éxito después de 5 segundos
+  useEffect(() => {
+    if (infoMessage) {
+      const timer = setTimeout(() => {
+        setInfoMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [infoMessage]);
+
+  // Auto-cerrar mensaje de error después de 5 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   useEffect(() => {
     if (auth?.idUsuario) {
       setCargando(true);
@@ -105,17 +125,20 @@ function HistorialCompras() {
         )}
 
         {infoMessage && (
-          <div className="bg-success-container/10 border border-success/35 text-success p-4 rounded-xl mb-8 font-body-md text-sm flex justify-between items-center">
+          <div className="bg-success-container/10 border border-success/35 text-success p-4 rounded-xl mb-8 font-body-md text-sm flex justify-between items-center animate-fade-in">
             <span>{infoMessage}</span>
-            <button onClick={() => setInfoMessage('')} className="bg-transparent border-0 text-success cursor-pointer font-bold font-body-md text-sm">
+            <button onClick={() => setInfoMessage('')} className="bg-transparent border-0 text-success cursor-pointer font-bold font-body-md text-sm pl-2">
               ✕
             </button>
           </div>
         )}
 
         {error && (
-          <div className="bg-error-container border border-error text-on-error-container p-4 rounded-xl mb-8 font-body-md text-sm">
-            {error}
+          <div className="bg-error-container border border-error text-on-error-container p-4 rounded-xl mb-8 font-body-md text-sm flex justify-between items-center animate-fade-in">
+            <span>{error}</span>
+            <button onClick={() => setError('')} className="bg-transparent border-0 text-on-error-container cursor-pointer font-bold font-body-md text-sm pl-2">
+              ✕
+            </button>
           </div>
         )}
 

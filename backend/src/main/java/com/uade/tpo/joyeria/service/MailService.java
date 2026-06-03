@@ -19,6 +19,9 @@ public class MailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.mail.username:service.exolink@gmail.com}")
+    private String remitente;
+
     private void enviarHtml(String destinatario, String asunto, String cuerpoHtml) {
         log.info("Intento de envío de email a: {} | Asunto: {}", destinatario, asunto);
         if (mailSender == null) {
@@ -30,6 +33,7 @@ public class MailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(remitente, "Aura");
             helper.setTo(destinatario);
             helper.setSubject(asunto);
             helper.setText(cuerpoHtml, true); // true = HTML
@@ -52,18 +56,18 @@ public class MailService {
     }
 
     public void enviarCorreoBienvenida(String email, String nombre) {
-        String asunto = "Bienvenido a Aureum - Joyería Exclusiva";
+        String asunto = "Bienvenido a Aura - Joyería Exclusiva";
         String cuerpo = "<html>" +
                 "<body style='font-family: \"Outfit\", \"Inter\", sans-serif; background-color: #faf9f7; color: #1a1a1a; padding: 40px; margin: 0;'>" +
                 "  <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>" +
                 "    <div style='text-align: center; margin-bottom: 30px;'>" +
-                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AUREUM</h1>" +
+                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AURA</h1>" +
                 "      <p style='font-size: 11px; letter-spacing: 2px; color: #8a7355; margin: 5px 0 0 0; text-transform: uppercase;'>High Jewelry</p>" +
                 "    </div>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;' />" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Hola, " + nombre + ",</p>" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
-                "      Es un honor darle la bienvenida a <strong>Aureum</strong>. A partir de ahora, usted forma parte de nuestra distinguida clientela, con acceso a piezas de joyería exclusivas diseñadas con la máxima precisión, metales preciosos y gemas seleccionadas meticulosamente." +
+                "      Es un honor darle la bienvenida a <strong>Aura</strong>. A partir de ahora, usted forma parte de nuestra distinguida clientela, con acceso a piezas de joyería exclusivas diseñadas con la máxima precisión, metales preciosos y gemas seleccionadas meticulosamente." +
                 "    </p>" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
                 "      Explore nuestras colecciones atemporales y descubra la perfecta armonía entre el diseño contemporáneo y la alta orfebrería." +
@@ -76,7 +80,7 @@ public class MailService {
                 "    </p>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 20px;' />" +
                 "    <div style='text-align: center; font-size: 12px; color: #999; font-weight: 300;'>" +
-                "      <p style='margin: 5px 0;'>AUREUM &copy; 2026. Todos los derechos reservados.</p>" +
+                "      <p style='margin: 5px 0;'>AURA &copy; 2026. Todos los derechos reservados.</p>" +
                 "      <p style='margin: 5px 0;'>Atención Exclusiva | Buenos Aires, Argentina</p>" +
                 "    </div>" +
                 "  </div>" +
@@ -86,38 +90,44 @@ public class MailService {
     }
 
     public void enviarFormularioContacto(String emailContacto, String nombre, String asunto, String mensaje) {
-        String asuntoCorreo = "Contacto Aureum: " + asunto;
+        String asuntoCorreo = "Contacto Aura: " + asunto;
         String cuerpo = "<html>" +
                 "<body style='font-family: \"Outfit\", \"Inter\", sans-serif; background-color: #faf9f7; color: #1a1a1a; padding: 40px; margin: 0;'>" +
                 "  <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>" +
                 "    <div style='text-align: center; margin-bottom: 30px;'>" +
-                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AUREUM</h1>" +
+                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AURA</h1>" +
                 "      <p style='font-size: 11px; letter-spacing: 2px; color: #8a7355; margin: 5px 0 0 0; text-transform: uppercase;'>Contacto Recibido</p>" +
                 "    </div>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;' />" +
-                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Se ha recibido un nuevo mensaje de contacto:</p>" +
-                "    <div style='background-color: #f7f7f5; padding: 20px; border-radius: 4px; margin: 20px 0; border-left: 3px solid #8a7355;'>" +
+                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Estimado/a " + nombre + ",</p>" +
+                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
+                "      Agradecemos que se haya puesto en contacto con Aura. Hemos recibido su consulta con éxito." +
+                "      Nuestros asesores especializados están revisando su mensaje y se comunicarán con usted a la brevedad, usualmente en un plazo no mayor a 24 o 48 horas hábiles." +
+                "    </p>" +
+                "    <p style='font-size: 14px; line-height: 1.6; font-weight: 400; margin-top: 20px; color: #111; text-transform: uppercase; letter-spacing: 1px;'>Detalle de su Consulta:</p>" +
+                "    <div style='background-color: #f7f7f5; padding: 20px; border-radius: 4px; margin: 15px 0; border-left: 3px solid #8a7355;'>" +
                 "      <p style='margin: 0 0 10px 0; font-size: 14px;'><strong>Nombre:</strong> " + nombre + "</p>" +
                 "      <p style='margin: 0 0 10px 0; font-size: 14px;'><strong>Email:</strong> " + emailContacto + "</p>" +
                 "      <p style='margin: 0 0 10px 0; font-size: 14px;'><strong>Asunto:</strong> " + asunto + "</p>" +
                 "      <p style='margin: 0; font-size: 14px; white-space: pre-wrap;'><strong>Mensaje:</strong><br/>" + mensaje + "</p>" +
                 "    </div>" +
                 "    <p style='font-size: 14px; line-height: 1.6; font-weight: 300; color: #666;'>" +
-                "      Este correo ha sido generado automáticamente por el sistema de contacto de la joyería Aureum." +
+                "      Este correo ha sido generado de manera automática para confirmar la recepción de su solicitud en la joyería Aura." +
                 "    </p>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 20px;' />" +
                 "    <div style='text-align: center; font-size: 12px; color: #999; font-weight: 300;'>" +
-                "      <p style='margin: 5px 0;'>AUREUM &copy; 2026. Todos los derechos reservados.</p>" +
+                "      <p style='margin: 5px 0;'>AURA &copy; 2026. Todos los derechos reservados.</p>" +
+                "      <p style='margin: 5px 0;'>Atención al Cliente Exclusiva | Buenos Aires, Argentina</p>" +
                 "    </div>" +
                 "  </div>" +
                 "</body>" +
                 "</html>";
         
-        enviarHtml(emailContacto, "Hemos recibido su mensaje - Aureum", cuerpo);
+        enviarHtml(emailContacto, "Hemos recibido su mensaje - Aura", cuerpo);
     }
 
     public void enviarConfirmacionCompra(String email, Orden orden) {
-        String asunto = "Confirmación de Compra - Orden #" + orden.getIdOrden() + " | Aureum";
+        String asunto = "Confirmación de Compra - Orden #" + orden.getIdOrden() + " | Aura";
         
         StringBuilder itemsHtml = new StringBuilder();
         for (DetalleOrden detalle : orden.getDetalles()) {
@@ -142,13 +152,13 @@ public class MailService {
                 "<body style='font-family: \"Outfit\", \"Inter\", sans-serif; background-color: #faf9f7; color: #1a1a1a; padding: 40px; margin: 0;'>" +
                 "  <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>" +
                 "    <div style='text-align: center; margin-bottom: 30px;'>" +
-                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AUREUM</h1>" +
+                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AURA</h1>" +
                 "      <p style='font-size: 11px; letter-spacing: 2px; color: #8a7355; margin: 5px 0 0 0; text-transform: uppercase;'>Confirmación de Pedido</p>" +
                 "    </div>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;' />" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Estimado/a " + orden.getNombreCompleto() + ",</p>" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
-                "      Agradecemos su compra en Aureum. Confirmamos que su pedido ha sido recibido y está siendo procesado con la dedicación que nos caracteriza." +
+                "      Agradecemos su compra en Aura. Confirmamos que su pedido ha sido recibido y está siendo procesado con la dedicación que nos caracteriza." +
                 "    </p>" +
                 "    <h3 style='font-size: 16px; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; margin-top: 30px; color: #111;'>Detalles del Pedido</h3>" +
                 "    <p style='font-size: 14px; color: #666; margin: 5px 0;'><strong>Orden #:</strong> " + orden.getIdOrden() + "</p>" +
@@ -183,7 +193,7 @@ public class MailService {
                 "    </p>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 20px;' />" +
                 "    <div style='text-align: center; font-size: 12px; color: #999; font-weight: 300;'>" +
-                "      <p style='margin: 5px 0;'>AUREUM &copy; 2026. Todos los derechos reservados.</p>" +
+                "      <p style='margin: 5px 0;'>AURA &copy; 2026. Todos los derechos reservados.</p>" +
                 "      <p style='margin: 5px 0;'>Si tiene dudas sobre su compra, responda a este correo o contáctenos por la web.</p>" +
                 "    </div>" +
                 "  </div>" +
@@ -193,25 +203,25 @@ public class MailService {
     }
 
     public void enviarCorreoPrueba(String email, String nombre) {
-        String asunto = "Prueba de Conexión de Correo - Aureum";
+        String asunto = "Prueba de Conexión de Correo - Aura";
         String cuerpo = "<html>" +
                 "<body style='font-family: \"Outfit\", \"Inter\", sans-serif; background-color: #faf9f7; color: #1a1a1a; padding: 40px; margin: 0;'>" +
                 "  <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>" +
                 "    <div style='text-align: center; margin-bottom: 30px;'>" +
-                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AUREUM</h1>" +
+                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AURA</h1>" +
                 "      <p style='font-size: 11px; letter-spacing: 2px; color: #8a7355; margin: 5px 0 0 0; text-transform: uppercase;'>Prueba del Sistema</p>" +
                 "    </div>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;' />" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Hola, " + nombre + ",</p>" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
-                "      Este es un correo de prueba enviado desde la plataforma <strong>Aureum Joyería</strong>." +
+                "      Este es un correo de prueba enviado desde la plataforma <strong>Aura Joyería</strong>." +
                 "    </p>" +
                 "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300; color: #8a7355;'>" +
                 "      Si está leyendo este mensaje, su configuración de servidor de correo SMTP está funcionando correctamente." +
                 "    </p>" +
                 "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 20px;' />" +
                 "    <div style='text-align: center; font-size: 12px; color: #999; font-weight: 300;'>" +
-                "      <p style='margin: 5px 0;'>AUREUM &copy; 2026. Todos los derechos reservados.</p>" +
+                "      <p style='margin: 5px 0;'>AURA &copy; 2026. Todos los derechos reservados.</p>" +
                 "    </div>" +
                 "  </div>" +
                 "</body>" +

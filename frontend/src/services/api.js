@@ -15,12 +15,61 @@ const getHeaders = (conAuth = true) => {
 /* Maneja la respuesta de fetch: lanza un error con el mensaje del backend si falla. */
 const manejarRespuesta = async (res) => {
   if (!res.ok) {
-    let mensajeError = `Error ${res.status}`;
+    let mensajeError = '';
     try {
       const cuerpo = await res.json();
-      mensajeError = cuerpo.message || cuerpo.error || mensajeError;
+      if (cuerpo && typeof cuerpo === 'object') {
+        if (cuerpo.message || cuerpo.error) {
+          mensajeError = cuerpo.message || cuerpo.error || '';
+        } else {
+          // Si es un mapa de validaciones (ej. { email: "...", password: "..." })
+          const valores = Object.values(cuerpo);
+          if (valores.length > 0) {
+            mensajeError = valores.join(' ');
+          }
+        }
+      }
     } catch {
-      // Si no hay JSON en el error, se usa el mensaje genérico
+      // Si no hay JSON en el error, se usa el mensaje mapeado abajo
+    }
+
+    // Traducir mensajes genéricos en inglés o vacíos
+    const mensajesGenericos = [
+      'forbidden',
+      'unauthorized',
+      'bad request',
+      'internal server error',
+      'not found',
+      'access denied',
+      'access_denied',
+      'no message available'
+    ];
+
+    const esGenerico = !mensajeError || mensajesGenericos.includes(mensajeError.toLowerCase().trim());
+
+    if (esGenerico) {
+      switch (res.status) {
+        case 400:
+          mensajeError = 'La solicitud es inválida o contiene datos incorrectos.';
+          break;
+        case 401:
+          mensajeError = 'No estás autenticado o tu sesión ha expirado. Por favor, inicia sesión.';
+          break;
+        case 403:
+          mensajeError = 'No tienes permisos suficientes para realizar esta acción.';
+          break;
+        case 404:
+          mensajeError = 'El recurso solicitado no existe.';
+          break;
+        case 429:
+          mensajeError = 'Has realizado demasiados intentos en poco tiempo. Por favor, espera un momento.';
+          break;
+        case 500:
+          mensajeError = 'Ocurrió un error en el servidor. Por favor, intenta de nuevo más tarde.';
+          break;
+        default:
+          mensajeError = `Ocurrió un error inesperado (Código ${res.status}).`;
+      }
     }
     throw new Error(mensajeError);
   }

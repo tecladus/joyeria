@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { enviarContacto } from '../services/api';
 
 function About() {
   const location = useLocation();
+  const auth = useSelector((state) => state.auth);
+  const estaLogueado = !!auth.token;
+
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -18,6 +22,27 @@ function About() {
   const [mapHovered, setMapHovered] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [errorContacto, setErrorContacto] = useState('');
+
+  // Autofillar si ya está logueado
+  useEffect(() => {
+    if (estaLogueado) {
+      setFormData((prev) => ({
+        ...prev,
+        nombre: `${auth.nombre || ''} ${auth.apellido || ''}`.trim(),
+        email: auth.email || ''
+      }));
+    }
+  }, [auth, estaLogueado]);
+
+  // Auto-cerrar mensaje de error después de 5 segundos
+  useEffect(() => {
+    if (errorContacto) {
+      const timer = setTimeout(() => {
+        setErrorContacto('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorContacto]);
 
   const pasosOficio = [
     {
@@ -181,8 +206,15 @@ function About() {
               </div>
 
               {errorContacto && (
-                <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-6 font-body-md text-sm">
-                  {errorContacto}
+                <div className="bg-error-container border border-error text-on-error-container p-4 rounded mb-6 font-body-md text-sm flex justify-between items-center animate-fade-in">
+                  <span>{errorContacto}</span>
+                  <button
+                    type="button"
+                    onClick={() => setErrorContacto('')}
+                    className="bg-transparent border-0 text-on-error-container cursor-pointer font-bold font-body-md text-sm pl-2"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-8">
@@ -191,9 +223,10 @@ function About() {
                     <input
                       type="text"
                       required
+                      disabled={estaLogueado}
                       value={formData.nombre}
                       onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                      className="w-full bg-transparent border-0 border-b border-outline py-3 px-0 focus:ring-0 focus:border-primary placeholder:text-outline/40 font-body-md text-on-surface"
+                      className="w-full bg-transparent border-0 border-b border-outline py-3 px-0 focus:ring-0 focus:border-primary placeholder:text-outline/40 font-body-md text-on-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Nombre Completo"
                     />
                   </div>
@@ -201,9 +234,10 @@ function About() {
                     <input
                       type="email"
                       required
+                      disabled={estaLogueado}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full bg-transparent border-0 border-b border-outline py-3 px-0 focus:ring-0 focus:border-primary placeholder:text-outline/40 font-body-md text-on-surface"
+                      className="w-full bg-transparent border-0 border-b border-outline py-3 px-0 focus:ring-0 focus:border-primary placeholder:text-outline/40 font-body-md text-on-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Correo Electrónico"
                     />
                   </div>
