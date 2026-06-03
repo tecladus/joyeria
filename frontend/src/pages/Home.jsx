@@ -38,7 +38,7 @@ function Home() {
             </h1>
             <button
               onClick={() => navigate('/productos')}
-              className="inline-block px-10 py-5 bg-white text-on-surface font-label-caps text-label-caps hover:bg-primary hover:text-white transition-all duration-500 tracking-widest uppercase border border-transparent text-xs font-semibold cursor-pointer rounded-sm"
+              className="inline-block px-10 py-5 bg-white text-neutral-900 font-label-caps text-label-caps hover:bg-primary hover:text-white transition-all duration-500 tracking-widest uppercase border border-transparent text-xs font-semibold cursor-pointer rounded-sm"
             >
               Descubrir Colección
             </button>

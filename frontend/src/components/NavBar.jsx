@@ -74,7 +74,7 @@ function NavBar() {
   }, []);
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-outline-variant/10 h-20 flex items-center">
+    <header className="fixed top-0 w-full z-50 bg-background border-b border-outline-variant/10 h-20 flex items-center">
       <nav className="max-w-container-max mx-auto px-6 md:px-margin-desktop flex justify-between items-center w-full">
         {/* Enlaces de navegación izquierda (Desktop) */}
         <div className="flex-1 hidden md:flex items-center gap-8">
