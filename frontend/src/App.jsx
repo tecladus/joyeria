@@ -16,7 +16,7 @@ import PanelVendedor from './pages/PanelVendedor';
 import HistorialCompras from './pages/HistorialCompras';
 import PanelAdmin from './pages/PanelAdmin';
 import PanelModerador from './pages/PanelModerador';
-import { getCarrito } from './services/api';
+import { getCarrito, getPerfilUsuario } from './services/api';
 
 function App() {
   // Estado de autenticación: sincronizado con localStorage
@@ -46,6 +46,27 @@ function App() {
       setCantidadCarrito(0);
     }
   }, [auth.token, auth.idUsuario]);
+
+  // Cargar perfil completo si está autenticado pero faltan datos locales (nombre)
+  useEffect(() => {
+    if (auth.token && !auth.nombre) {
+      getPerfilUsuario()
+        .then((perfil) => {
+          localStorage.setItem('nombre', perfil.nombre || '');
+          localStorage.setItem('apellido', perfil.apellido || '');
+          localStorage.setItem('direccion', perfil.direccion || '');
+          localStorage.setItem('telefono', perfil.telefono || '');
+          setAuth((prev) => ({
+            ...prev,
+            nombre: perfil.nombre || '',
+            apellido: perfil.apellido || '',
+            direccion: perfil.direccion || '',
+            telefono: perfil.telefono || '',
+          }));
+        })
+        .catch(() => {});
+    }
+  }, [auth.token, auth.nombre]);
 
   const iniciarSesion = (datos) => {
     localStorage.setItem('token', datos.token);

@@ -40,6 +40,11 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.convertirseEnVendedor(usuario.getIdUsuario()));
     }
 
+    @GetMapping("/perfil")
+    public ResponseEntity<UsuarioResponse> obtenerPerfil(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioService.obtenerPerfil(usuario.getEmail()));
+    }
+
     @GetMapping
     public ResponseEntity<List<UsuarioResponse>> listarTodos() {
         return ResponseEntity.ok(usuarioService.listarTodos());

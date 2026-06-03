@@ -45,6 +45,13 @@ export const loginUsuario = async (email, password) => {
   return manejarRespuesta(res);
 };
 
+export const getPerfilUsuario = async () => {
+  const res = await fetch(`${BASE_URL}/usuarios/perfil`, {
+    headers: getHeaders(),
+  });
+  return manejarRespuesta(res);
+};
+
 export const registrarUsuario = async (datos) => {
   const res = await fetch(`${BASE_URL}/usuarios/registro`, {
     method: 'POST',
