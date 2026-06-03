@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getCarrito, modificarCantidadItem, eliminarDelCarrito, hacerCheckout } from '../services/api';
+import { getCarrito, modificarCantidadItem, eliminarDelCarrito, hacerCheckout, crearPreferenciaPago } from '../services/api';
 import CarritoItem from '../components/CarritoItem';
 import { setCantidadCarrito } from '../redux/slices/carritoSlice';
 import { adjustPriceByDevice, deviceDetector } from '../services/deviceDetection';
@@ -145,6 +145,18 @@ function Carrito() {
         telefono: datosEnvio.telefono,
         multiplicadorDispositivo: deviceDetector.multiplier.multiplier
       };
+
+      if (metodoPago === 'mercadopago') {
+        const res = await crearPreferenciaPago(auth.idUsuario, datosCheckout);
+        if (res && res.initPoint) {
+          dispatch(setCantidadCarrito(0));
+          window.location.href = res.initPoint;
+          return;
+        } else {
+          throw new Error('No se pudo generar la preferencia de pago de Mercado Pago.');
+        }
+      }
+
       await hacerCheckout(auth.idUsuario, datosCheckout);
       setCheckoutExitoso(true);
       dispatch(setCantidadCarrito(0));
@@ -318,7 +330,7 @@ function Carrito() {
                   </div>
 
                   {/* Selectores de pago */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {/* Tarjeta */}
                     <div
                       onClick={() => { setMetodoPago('tarjeta'); setError(''); }}
@@ -356,6 +368,19 @@ function Carrito() {
                     >
                       <span className="material-symbols-outlined text-2xl font-light">storefront</span>
                       <span className="font-label-caps text-[10px] font-semibold tracking-wider uppercase">Pago al Retirar</span>
+                    </div>
+
+                    {/* Mercado Pago */}
+                    <div
+                      onClick={() => { setMetodoPago('mercadopago'); setError(''); }}
+                      className={`p-5 border rounded-lg cursor-pointer flex flex-col items-center justify-center text-center gap-3 transition-all duration-300 select-none ${
+                        metodoPago === 'mercadopago'
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-outline-variant/40 hover:border-outline text-secondary'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-2xl font-light">payments</span>
+                      <span className="font-label-caps text-[10px] font-semibold tracking-wider uppercase">Mercado Pago</span>
                     </div>
                   </div>
 
@@ -484,6 +509,21 @@ function Carrito() {
                         </p>
                         <p className="border-t border-outline-variant/10 pt-3">
                           <em>Presenta tu DNI y el número de confirmación al retirar tu pieza.</em>
+                        </p>
+                      </div>
+                    )}
+
+                    {metodoPago === 'mercadopago' && (
+                      <div className="space-y-4 text-xs font-body-md text-secondary leading-relaxed">
+                        <div className="flex items-center gap-2 text-primary font-medium">
+                          <span className="material-symbols-outlined text-lg font-light">verified_user</span>
+                          <span className="font-label-caps text-[10px] font-semibold tracking-wider uppercase">Transacción Segura</span>
+                        </div>
+                        <p>
+                          Serás redirigido de manera segura a la plataforma oficial de <strong className="text-on-surface font-medium">Mercado Pago</strong> para completar tu compra.
+                        </p>
+                        <p className="italic text-outline">
+                          Admite tarjetas de crédito, débito, dinero en cuenta o medios de pago en efectivo.
                         </p>
                       </div>
                     )}

@@ -30,6 +30,24 @@ public class OrdenController {
                 .body(ordenService.checkout(usuario.getIdUsuario(), request));
     }
 
+    @PostMapping("/checkout/preferencia")
+    public ResponseEntity<java.util.Map<String, String>> checkoutPreferencia(@AuthenticationPrincipal Usuario usuario,
+                                                                             @Valid @RequestBody CheckoutRequest request) {
+        String initPoint = ordenService.checkoutMercadoPago(usuario.getIdUsuario(), request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(java.util.Map.of("initPoint", initPoint));
+    }
+
+    @PostMapping("/{id}/confirmar-pago")
+    public ResponseEntity<OrdenResponse> confirmarPago(@PathVariable Long id, @RequestParam String status) {
+        return ResponseEntity.ok(ordenService.confirmarPagoOrden(id, status));
+    }
+
+    @PostMapping("/notificacion-pago")
+    public ResponseEntity<Void> recibirNotificacionPago(@RequestBody(required = false) java.util.Map<String, Object> payload) {
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping
     public ResponseEntity<List<OrdenResponse>> listar(@AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(ordenService.listarPorUsuario(usuario.getIdUsuario()));

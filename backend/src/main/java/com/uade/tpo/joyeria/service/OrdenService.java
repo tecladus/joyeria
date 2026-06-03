@@ -7,6 +7,7 @@ import com.uade.tpo.joyeria.exception.RecursoNoEncontradoException;
 import com.uade.tpo.joyeria.exception.StockInsuficienteException;
 import com.uade.tpo.joyeria.repository.OrdenRepository;
 import com.uade.tpo.joyeria.repository.ProductoRepository;
+import com.uade.tpo.joyeria.repository.PagoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,17 +26,23 @@ public class OrdenService {
     private final UsuarioService usuarioService;
     private final CarritoService carritoService;
     private final MailService mailService;
+    private final PagoRepository pagoRepository;
+    private final MercadoPagoService mercadoPagoService;
 
     public OrdenService(OrdenRepository ordenRepository,
                         ProductoRepository productoRepository,
                         UsuarioService usuarioService,
                         CarritoService carritoService,
-                        MailService mailService) {
+                        MailService mailService,
+                        PagoRepository pagoRepository,
+                        MercadoPagoService mercadoPagoService) {
         this.ordenRepository = ordenRepository;
         this.productoRepository = productoRepository;
         this.usuarioService = usuarioService;
         this.carritoService = carritoService;
         this.mailService = mailService;
+        this.pagoRepository = pagoRepository;
+        this.mercadoPagoService = mercadoPagoService;
     }
 
     // @Transactional es critico: agrupa todas las operaciones en una sola transaccion.
@@ -171,6 +178,101 @@ public class OrdenService {
 
         orden.setEstado(nuevoEstado);
         return mapearAResponse(ordenRepository.save(orden));
+    }
+
+    @Transactional
+    public String checkoutMercadoPago(Long usuarioId, CheckoutRequest checkoutRequest) {
+        Usuario usuario = usuarioService.obtenerPorId(usuarioId);
+        Carrito carrito = carritoService.obtenerOCrearCarritoActivo(usuario);
+
+        if (carrito.getItems().isEmpty()) {
+            throw new RecursoNoEncontradoException("El carrito esta vacio");
+        }
+
+        for (ItemCarrito item : carrito.getItems()) {
+            if (item.getProducto().getStock() < item.getCantidad()) {
+                throw new StockInsuficienteException(
+                        "Stock insuficiente para: " + item.getProducto().getNombre() +
+                        ". Disponible: " + item.getProducto().getStock() +
+                        ", requerido: " + item.getCantidad());
+            }
+        }
+
+        Orden orden = new Orden();
+        orden.setUsuario(usuario);
+        orden.setFecha(LocalDateTime.now());
+        orden.setEstado("PENDIENTE_PAGO");
+        orden.setMetodoPago("MERCADO_PAGO");
+        orden.setNombreCompleto(checkoutRequest.getNombreCompleto());
+        orden.setDireccion(checkoutRequest.getDireccion());
+        orden.setCiudad(checkoutRequest.getCiudad());
+        orden.setCodigoPostal(checkoutRequest.getCodigoPostal());
+        orden.setTelefono(checkoutRequest.getTelefono());
+
+        List<DetalleOrden> detalles = carrito.getItems().stream()
+                .map(item -> {
+                    Producto producto = item.getProducto();
+                    producto.setStock(producto.getStock() - item.getCantidad());
+                    productoRepository.save(producto);
+
+                    DetalleOrden detalle = new DetalleOrden();
+                    detalle.setOrden(orden);
+                    detalle.setProducto(producto);
+                    detalle.setCantidad(item.getCantidad());
+                    
+                    BigDecimal precioUnitario = producto.getPrecio();
+                    if (checkoutRequest.getMultiplicadorDispositivo() != null) {
+                        precioUnitario = precioUnitario.multiply(checkoutRequest.getMultiplicadorDispositivo())
+                                .setScale(2, java.math.RoundingMode.HALF_UP);
+                    }
+                    detalle.setPrecioUnitario(precioUnitario);
+                    return detalle;
+                })
+                .collect(Collectors.toList());
+
+        orden.setDetalles(detalles);
+
+        BigDecimal total = detalles.stream()
+                .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        orden.setTotal(total);
+        carrito.setActivo(false);
+
+        Orden guardada = ordenRepository.save(orden);
+
+        String descripcion = "Compra en Aura Joyería - Orden #" + guardada.getIdOrden();
+        return mercadoPagoService.crearPreferenciaPago(guardada.getIdOrden(), descripcion, guardada.getTotal());
+    }
+
+    @Transactional
+    public OrdenResponse confirmarPagoOrden(Long ordenId, String status) {
+        Orden orden = ordenRepository.findById(ordenId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Orden no encontrada: " + ordenId));
+
+        if ("PENDIENTE_PAGO".equals(orden.getEstado())) {
+            if ("approved".equals(status) || "success".equals(status)) {
+                orden.setEstado("PENDIENTE");
+                Orden guardada = ordenRepository.save(orden);
+
+                Pago pago = new Pago();
+                pago.setMetodo("MERCADO_PAGO");
+                pago.setEstado("APROBADO");
+                pago.setFecha(LocalDateTime.now());
+                pago.setOrden(guardada);
+                pagoRepository.save(pago);
+
+                try {
+                    mailService.enviarConfirmacionCompra(orden.getUsuario().getEmail(), guardada);
+                } catch (Exception e) {
+                    System.err.println("Error al enviar email de confirmacion de orden MP: " + e.getMessage());
+                }
+                return mapearAResponse(guardada);
+            } else if ("failure".equals(status) || "rejected".equals(status)) {
+                return actualizarEstado(ordenId, "CANCELADO");
+            }
+        }
+        return mapearAResponse(orden);
     }
 
     private OrdenResponse mapearAResponse(Orden orden) {

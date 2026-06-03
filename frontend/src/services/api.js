@@ -191,6 +191,14 @@ export const getOrdenes = async (usuarioId) => {
   return api.get(`/ordenes?usuarioId=${usuarioId}`);
 };
 
+export const crearPreferenciaPago = async (usuarioId, datosCheckout) => {
+  return api.post(`/ordenes/checkout/preferencia?usuarioId=${usuarioId}`, datosCheckout);
+};
+
+export const confirmarPagoOrden = async (ordenId, status) => {
+  return api.post(`/ordenes/${ordenId}/confirmar-pago?status=${status}`);
+};
+
 // ========================
 //      ADMIN / MODERADOR
 // ========================

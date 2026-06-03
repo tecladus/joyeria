@@ -21,6 +21,7 @@ import { fetchPerfil } from './redux/slices/authSlice';
 import { fetchCantidadCarrito } from './redux/slices/carritoSlice';
 import { inicializarFavoritos, limpiarFavoritos } from './redux/slices/favoritosSlice';
 import Favoritos from './pages/Favoritos';
+import CheckoutResultado from './pages/CheckoutResultado';
 
 function App() {
   const dispatch = useDispatch();
@@ -109,6 +110,14 @@ function App() {
                 element={
                   <RutaProtegida>
                     <Carrito />
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/checkout/resultado"
+                element={
+                  <RutaProtegida>
+                    <CheckoutResultado />
                   </RutaProtegida>
                 }
               />
