@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getOrdenes } from '../services/api';
+import { getOrdenes, enviarEmailPrueba } from '../services/api';
 
 function HistorialCompras() {
   const auth = useSelector((state) => state.auth);
@@ -9,6 +9,22 @@ function HistorialCompras() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [ordenAbierta, setOrdenAbierta] = useState(null);
+  const [enviandoTest, setEnviandoTest] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+
+  const handleTestEmail = async () => {
+    setEnviandoTest(true);
+    setError('');
+    setInfoMessage('');
+    try {
+      const res = await enviarEmailPrueba();
+      setInfoMessage(res.message || 'Se ha enviado un correo de prueba a tu casilla.');
+    } catch (err) {
+      setError(err.message || 'Error al enviar correo de prueba.');
+    } finally {
+      setEnviandoTest(false);
+    }
+  };
 
   useEffect(() => {
     if (auth?.idUsuario) {
@@ -61,21 +77,39 @@ function HistorialCompras() {
       <main className="max-w-4xl mx-auto px-6 md:px-8">
         
         {/* Encabezado */}
-        <section className="mb-12 border-b border-outline-variant/10 pb-8">
-          <h1 className="font-display-lg text-3xl md:text-5xl text-on-background mb-4">
-            Mis Compras
-          </h1>
-          <p className="font-body-lg text-secondary font-light">
-            Aquí puedes ver el historial de todas las órdenes exclusivas que has adquirido en Aura.
-          </p>
+        <section className="mb-12 border-b border-outline-variant/10 pb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div>
+            <h1 className="font-display-lg text-3xl md:text-5xl text-on-background mb-4">
+              Mis Compras
+            </h1>
+            <p className="font-body-lg text-secondary font-light">
+              Aquí puedes ver el historial de todas las órdenes exclusivas que has adquirido en Aura.
+            </p>
+          </div>
+          <button
+            onClick={handleTestEmail}
+            disabled={enviandoTest}
+            className="px-4 py-2 border border-primary hover:border-primary text-secondary hover:text-primary transition-all text-xs font-semibold font-label-caps uppercase bg-transparent rounded-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {enviandoTest ? 'Enviando...' : 'Probar Email'}
+          </button>
         </section>
 
-        {/* Mensajes de carga o error */}
+        {/* Mensajes de carga, éxito o error */}
         {cargando && (
           <div className="text-center py-20">
             <p className="font-label-caps text-label-caps text-primary tracking-widest animate-pulse">
               Cargando historial de compras...
             </p>
+          </div>
+        )}
+
+        {infoMessage && (
+          <div className="bg-success-container/10 border border-success/35 text-success p-4 rounded-xl mb-8 font-body-md text-sm flex justify-between items-center">
+            <span>{infoMessage}</span>
+            <button onClick={() => setInfoMessage('')} className="bg-transparent border-0 text-success cursor-pointer font-bold font-body-md text-sm">
+              ✕
+            </button>
           </div>
         )}
 
