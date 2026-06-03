@@ -78,6 +78,11 @@ function Productos({ auth, onActualizarCarrito }) {
     setPaginaActiva(1);
   }, [categoriaActiva, busqueda, materialesSeleccionados, orden, precioMin, precioMax]);
 
+  // Hacer scroll hacia arriba al cambiar de página o aplicar filtros principales
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [paginaActiva, categoriaActiva, orden, busqueda, materialesSeleccionados]);
+
   // Manejo de agregar al carrito
   const handleAgregarCarrito = async (productoId) => {
     if (!auth?.token || !auth?.idUsuario) return;
