@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getOrdenes, enviarEmailPrueba } from '../services/api';
+import { getOrdenes } from '../services/api';
 
 function HistorialCompras() {
   const auth = useSelector((state) => state.auth);
@@ -9,22 +9,7 @@ function HistorialCompras() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [ordenAbierta, setOrdenAbierta] = useState(null);
-  const [enviandoTest, setEnviandoTest] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
-
-  const handleTestEmail = async () => {
-    setEnviandoTest(true);
-    setError('');
-    setInfoMessage('');
-    try {
-      const res = await enviarEmailPrueba();
-      setInfoMessage(res.message || 'Se ha enviado un correo de prueba a tu casilla.');
-    } catch (err) {
-      setError(err.message || 'Error al enviar correo de prueba.');
-    } finally {
-      setEnviandoTest(false);
-    }
-  };
 
   // Auto-cerrar mensaje de éxito después de 5 segundos
   useEffect(() => {
@@ -106,13 +91,6 @@ function HistorialCompras() {
               Aquí puedes ver el historial de todas las órdenes exclusivas que has adquirido en Aura.
             </p>
           </div>
-          <button
-            onClick={handleTestEmail}
-            disabled={enviandoTest}
-            className="px-4 py-2 border border-primary hover:border-primary text-secondary hover:text-primary transition-all text-xs font-semibold font-label-caps uppercase bg-transparent rounded-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {enviandoTest ? 'Enviando...' : 'Probar Email'}
-          </button>
         </section>
 
         {/* Mensajes de carga, éxito o error */}

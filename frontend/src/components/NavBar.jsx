@@ -14,6 +14,8 @@ function NavBar() {
 
   const auth = useSelector((state) => state.auth);
   const cantidadCarrito = useSelector((state) => state.carrito.cantidadCarrito);
+  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const cantidadFavoritos = favoritos.length;
 
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
@@ -155,6 +157,25 @@ function NavBar() {
                 search
               </button>
             </form>
+
+            {/* Icono de Favoritos (Corazón) */}
+            <Link
+              to="/favoritos"
+              className="relative hover:text-primary transition-colors duration-300 flex items-center justify-center cursor-pointer text-on-surface"
+              title="Mis Favoritos"
+            >
+              <span 
+                className="material-symbols-outlined text-2xl"
+                style={cantidadFavoritos > 0 ? { fontVariationSettings: '"FILL" 1', color: '#e53e3e' } : {}}
+              >
+                favorite
+              </span>
+              {cantidadFavoritos > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-on-surface text-background text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold font-label-caps">
+                  {cantidadFavoritos}
+                </span>
+              )}
+            </Link>
 
             {/* Icono de Usuario (Perfil/Acciones) */}
             <div className="relative">
@@ -348,6 +369,26 @@ function NavBar() {
             className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
           >
             Contacto
+          </Link>
+          <Link
+            to="/favoritos"
+            onClick={() => setMenuMovilAbierto(false)}
+            className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 flex justify-between items-center text-left"
+          >
+            <span>Mis Favoritos</span>
+            <div className="flex items-center gap-1">
+              <span 
+                className="material-symbols-outlined text-base"
+                style={cantidadFavoritos > 0 ? { fontVariationSettings: '"FILL" 1', color: '#e53e3e' } : {}}
+              >
+                favorite
+              </span>
+              {cantidadFavoritos > 0 && (
+                <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  {cantidadFavoritos}
+                </span>
+              )}
+            </div>
           </Link>
           
           {/* Selector de Tema (Móvil) */}

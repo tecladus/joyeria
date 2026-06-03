@@ -5,6 +5,7 @@ import { getProductoPorId, getProductos, agregarAlCarrito } from '../services/ap
 import TarjetaProducto from '../components/TarjetaProducto';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { toggleFavorito } from '../redux/slices/favoritosSlice';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -26,6 +27,8 @@ function DetalleProducto() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
+  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const esFavorito = producto && favoritos.some((item) => item.idProducto === producto.idProducto);
   const deviceMultiplier = useDeviceMultiplier();
 
   const [producto, setProducto] = useState(null);
@@ -288,6 +291,23 @@ function DetalleProducto() {
                       >
                         {agregando ? 'Añadiendo...' : sinStock ? 'Agotado' : 'Añadir a la Bolsa'}
                       </button>
+
+                      {/* Favorite Button */}
+                      {producto && (
+                        <button
+                          type="button"
+                          onClick={() => dispatch(toggleFavorito(producto))}
+                          className="px-6 border border-outline-variant/35 hover:border-primary transition-all duration-300 flex items-center justify-center cursor-pointer rounded-sm text-on-surface hover:text-error bg-transparent"
+                          title={esFavorito ? 'Quitar de Favoritos' : 'Añadir a Favoritos'}
+                        >
+                          <span 
+                            className="material-symbols-outlined text-2xl"
+                            style={esFavorito ? { fontVariationSettings: '"FILL" 1', color: '#e53e3e' } : {}}
+                          >
+                            favorite
+                          </span>
+                        </button>
+                      )}
                     </div>
                 </div>
 

@@ -200,32 +200,4 @@ public class MailService {
                 "</body>" +
                 "</html>";
         enviarHtml(email, asunto, cuerpo);
-    }
-
-    public void enviarCorreoPrueba(String email, String nombre) {
-        String asunto = "Prueba de Conexión de Correo - Aura";
-        String cuerpo = "<html>" +
-                "<body style='font-family: \"Outfit\", \"Inter\", sans-serif; background-color: #faf9f7; color: #1a1a1a; padding: 40px; margin: 0;'>" +
-                "  <div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border: 1px solid #e5e5e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);'>" +
-                "    <div style='text-align: center; margin-bottom: 30px;'>" +
-                "      <h1 style='font-size: 28px; font-weight: 300; letter-spacing: 4px; margin: 0; color: #111; text-transform: uppercase;'>AURA</h1>" +
-                "      <p style='font-size: 11px; letter-spacing: 2px; color: #8a7355; margin: 5px 0 0 0; text-transform: uppercase;'>Prueba del Sistema</p>" +
-                "    </div>" +
-                "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-bottom: 30px;' />" +
-                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>Hola, " + nombre + ",</p>" +
-                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300;'>" +
-                "      Este es un correo de prueba enviado desde la plataforma <strong>Aura Joyería</strong>." +
-                "    </p>" +
-                "    <p style='font-size: 16px; line-height: 1.6; font-weight: 300; color: #8a7355;'>" +
-                "      Si está leyendo este mensaje, su configuración de servidor de correo SMTP está funcionando correctamente." +
-                "    </p>" +
-                "    <hr style='border: 0; border-top: 1px solid #eaeaea; margin-top: 40px; margin-bottom: 20px;' />" +
-                "    <div style='text-align: center; font-size: 12px; color: #999; font-weight: 300;'>" +
-                "      <p style='margin: 5px 0;'>AURA &copy; 2026. Todos los derechos reservados.</p>" +
-                "    </div>" +
-                "  </div>" +
-                "</body>" +
-                "</html>";
-        enviarHtml(email, asunto, cuerpo);
-    }
-}
+    }}

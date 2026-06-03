@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
+import { toggleFavorito } from '../redux/slices/favoritosSlice';
 
 /* Formatea un número como precio en dólares */
 const formatearPrecio = (precio) =>
@@ -15,7 +16,10 @@ const precioConDescuento = (precio, descuento) => {
 
 function TarjetaProducto({ producto, onAgregarCarrito }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
+  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const esFavorito = favoritos.some((item) => item.idProducto === producto.idProducto);
   const [errorImagen, setErrorImagen] = useState(false);
   const deviceMultiplier = useDeviceMultiplier();
   const puedeAgregarAlCarrito = !!auth?.token;
@@ -52,6 +56,24 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
             ◇
           </div>
         )}
+
+        {/* Botón de Favorito */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            dispatch(toggleFavorito(producto));
+          }}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/10 flex items-center justify-center cursor-pointer text-on-surface hover:scale-105 transition-all duration-300 shadow-sm"
+          title={esFavorito ? 'Quitar de Favoritos' : 'Añadir a Favoritos'}
+        >
+          <span 
+            className="material-symbols-outlined text-lg"
+            style={esFavorito ? { fontVariationSettings: '"FILL" 1', color: '#e53e3e' } : {}}
+          >
+            favorite
+          </span>
+        </button>
 
         {/* Badges superiores */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">

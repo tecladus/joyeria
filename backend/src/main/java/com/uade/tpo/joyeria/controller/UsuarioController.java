@@ -20,23 +20,9 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final com.uade.tpo.joyeria.service.MailService mailService;
 
-    public UsuarioController(UsuarioService usuarioService,
-                             com.uade.tpo.joyeria.service.MailService mailService) {
+    public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
-        this.mailService = mailService;
-    }
-
-    @PostMapping("/test-email")
-    public ResponseEntity<?> enviarEmailPrueba(@AuthenticationPrincipal Usuario usuario) {
-        try {
-            mailService.enviarCorreoPrueba(usuario.getEmail(), usuario.getNombre() + " " + usuario.getApellido());
-            return ResponseEntity.ok(java.util.Map.of("message", "Email de prueba enviado exitosamente a " + usuario.getEmail()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(java.util.Map.of("error", "Error al enviar el email: " + e.getMessage()));
-        }
     }
 
     @PostMapping("/registro")

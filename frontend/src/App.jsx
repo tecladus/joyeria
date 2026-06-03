@@ -19,6 +19,8 @@ import PanelAdmin from './pages/PanelAdmin';
 import PanelModerador from './pages/PanelModerador';
 import { fetchPerfil } from './redux/slices/authSlice';
 import { fetchCantidadCarrito } from './redux/slices/carritoSlice';
+import { inicializarFavoritos } from './redux/slices/favoritosSlice';
+import Favoritos from './pages/Favoritos';
 
 function App() {
   const dispatch = useDispatch();
@@ -71,6 +73,11 @@ function App() {
     }
   }, [auth.token, auth.nombre, dispatch]);
 
+  // Sincronizar favoritos cuando cambia de usuario
+  useEffect(() => {
+    dispatch(inicializarFavoritos(auth.idUsuario || 'guest'));
+  }, [auth.idUsuario, dispatch]);
+
   return (
     <ModalProvider>
       <BrowserRouter>
@@ -85,6 +92,7 @@ function App() {
               <Route path="/registro" element={<Registro />} />
               <Route path="/productos" element={<Productos />} />
               <Route path="/productos/:id" element={<DetalleProducto />} />
+              <Route path="/favoritos" element={<Favoritos />} />
               <Route
                 path="/carrito"
                 element={

@@ -321,12 +321,6 @@ export const enviarContacto = async (datosContacto) => {
   return manejarRespuesta(res);
 };
 
-export const enviarEmailPrueba = async () => {
-  const res = await fetch(`${BASE_URL}/usuarios/test-email`, {
-    method: 'POST',
-    headers: getHeaders(),
-  });
-  return manejarRespuesta(res);
-};
+
 
 
