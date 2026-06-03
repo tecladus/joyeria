@@ -28,10 +28,10 @@ function DetalleProducto() {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const favoritos = useSelector((state) => state.favoritos.items || []);
-  const esFavorito = producto && favoritos.some((item) => item.idProducto === producto.idProducto);
   const deviceMultiplier = useDeviceMultiplier();
 
   const [producto, setProducto] = useState(null);
+  const esFavorito = producto && favoritos.some((item) => item.idProducto === producto.idProducto);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [agregando, setAgregando] = useState(false);
