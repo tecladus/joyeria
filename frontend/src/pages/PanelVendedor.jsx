@@ -7,6 +7,7 @@ import {
   eliminarProducto,
   aplicarDescuento,
 } from '../services/api';
+import { useModal } from '../components/ModalContext';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -22,6 +23,7 @@ const FORM_VACIO = {
 };
 
 function PanelVendedor({ auth }) {
+  const { showConfirm } = useModal();
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -130,7 +132,8 @@ function PanelVendedor({ auth }) {
   };
 
   const handleEliminar = async (producto) => {
-    if (!confirm(`¿Eliminar "${producto.nombre}"? Esta acción no se puede deshacer.`)) return;
+    const confirmado = await showConfirm(`¿Eliminar "${producto.nombre}"? Esta acción no se puede deshacer.`, 'Eliminar Joya');
+    if (!confirmado) return;
     try {
       await eliminarProducto(producto.idProducto, auth.idUsuario);
       mostrarExito('Producto eliminado.');

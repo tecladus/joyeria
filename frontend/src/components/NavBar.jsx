@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { convertirseEnVendedor } from '../services/api';
+import { useModal } from './ModalContext';
 
 function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showConfirm, showAlert } = useModal();
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
   const dropdownRef = useRef(null);
@@ -23,7 +25,11 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
   };
 
   const handleConvertirseEnVendedor = async () => {
-    if (!window.confirm('¿Desea convertir su cuenta en una cuenta de Vendedor para publicar y gestionar sus propias joyas?')) return;
+    const confirmado = await showConfirm(
+      '¿Desea convertir su cuenta en una cuenta de Vendedor para publicar y gestionar sus propias joyas?',
+      'Convertirse en Vendedor'
+    );
+    if (!confirmado) return;
     try {
       const datos = await convertirseEnVendedor();
       onActualizarAuth(datos);
@@ -31,7 +37,7 @@ function NavBar({ auth, onCerrarSesion, cantidadCarrito, onActualizarAuth }) {
       setMenuMovilAbierto(false);
       navigate('/vendedor');
     } catch (err) {
-      alert(err.message || 'Error al convertir la cuenta.');
+      await showAlert(err.message || 'Error al convertir la cuenta.', 'Error');
     }
   };
 

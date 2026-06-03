@@ -5,6 +5,7 @@ import {
   getProductos, eliminarProducto,
   getCategorias
 } from '../services/api';
+import { useModal } from '../components/ModalContext';
 
 const TABS = [
   { id: 'users', label: 'Lista Usuarios' },
@@ -14,6 +15,7 @@ const TABS = [
 ];
 
 function PanelModerador({ auth }) {
+  const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('users');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -57,7 +59,11 @@ function PanelModerador({ auth }) {
 
   // Handlers Catálogo (Solo eliminación por moderación)
   const handleEliminarProducto = async (id) => {
-    if (!window.confirm('¿Desea eliminar esta pieza del catálogo por infracción de políticas?')) return;
+    const confirmado = await showConfirm(
+      '¿Desea eliminar esta pieza del catálogo por infracción de políticas?',
+      'Moderar Producto'
+    );
+    if (!confirmado) return;
     try {
       await eliminarProducto(id, auth.idUsuario);
       mostrarToast('Pieza removida del catálogo por moderador');

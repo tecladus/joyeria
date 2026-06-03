@@ -5,6 +5,7 @@ import {
   getProductos, eliminarProducto, editarProducto,
   getCategorias, crearCategoria, eliminarCategoria, editarCategoria
 } from '../services/api';
+import { useModal } from '../components/ModalContext';
 
 const TABS = [
   { id: 'metrics', label: 'Métricas' },
@@ -22,6 +23,7 @@ const ROLES = [
 ];
 
 function PanelAdmin({ auth }) {
+  const { showConfirm } = useModal();
   const [tabActiva, setTabActiva] = useState('metrics');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -91,7 +93,8 @@ function PanelAdmin({ auth }) {
   };
 
   const handleEliminarUsuario = async (id) => {
-    if (!window.confirm('¿Está seguro de que desea eliminar este usuario de forma permanente?')) return;
+    const confirmado = await showConfirm('¿Está seguro de que desea eliminar este usuario de forma permanente?', 'Eliminar Usuario');
+    if (!confirmado) return;
     try {
       await eliminarUsuario(id);
       mostrarToast('Usuario eliminado correctamente');
@@ -103,7 +106,8 @@ function PanelAdmin({ auth }) {
 
   // Handlers Catálogo
   const handleEliminarProducto = async (id) => {
-    if (!window.confirm('¿Desea eliminar este producto del catálogo?')) return;
+    const confirmado = await showConfirm('¿Desea eliminar este producto del catálogo?', 'Eliminar Producto');
+    if (!confirmado) return;
     try {
       await eliminarProducto(id, auth.idUsuario);
       mostrarToast('Producto eliminado del catálogo');
@@ -171,7 +175,8 @@ function PanelAdmin({ auth }) {
   };
 
   const handleEliminarCategoria = async (id) => {
-    if (!window.confirm('¿Está seguro de que desea eliminar esta categoría?')) return;
+    const confirmado = await showConfirm('¿Está seguro de que desea eliminar esta categoría?', 'Eliminar Categoría');
+    if (!confirmado) return;
     try {
       await eliminarCategoria(id);
       mostrarToast('Categoría eliminada');

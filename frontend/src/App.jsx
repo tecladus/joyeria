@@ -4,6 +4,7 @@ import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 import RutaProtegida from './components/RutaProtegida';
 import ScrollToTop from './components/ScrollToTop';
+import { ModalProvider } from './components/ModalContext';
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/Login';
@@ -62,67 +63,68 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <div className="flex flex-col min-h-screen bg-background">
-        <NavBar auth={auth} onCerrarSesion={cerrarSesion} cantidadCarrito={cantidadCarrito} onActualizarAuth={iniciarSesion} />
-        <div className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login onIniciarSesion={iniciarSesion} />} />
-            <Route path="/registro" element={<Registro onIniciarSesion={iniciarSesion} />} />
-            <Route path="/productos" element={<Productos auth={auth} onActualizarCarrito={actualizarCarrito} />} />
-            <Route path="/productos/:id" element={<DetalleProducto auth={auth} onActualizarCarrito={actualizarCarrito} />} />
-            <Route
-              path="/carrito"
-              element={
-                <RutaProtegida auth={auth}>
-                  <Carrito auth={auth} onActualizarCarrito={actualizarCarrito} />
-                </RutaProtegida>
-              }
-            />
-            <Route
-              path="/vendedor"
-              element={
-                <RutaProtegida auth={auth} rolRequerido={['VENDEDOR', 'ADMIN', 'MODERATOR']}>
-                  <PanelVendedor auth={auth} />
-                </RutaProtegida>
-              }
-            />
-            <Route
-              path="/compras"
-              element={
-                <RutaProtegida auth={auth}>
-                  <HistorialCompras auth={auth} />
-                </RutaProtegida>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RutaProtegida auth={auth} rolRequerido="ADMIN">
-                  <PanelAdmin auth={auth} />
-                </RutaProtegida>
-              }
-            />
-            <Route
-              path="/moderador"
-              element={
-                <RutaProtegida auth={auth} rolRequerido="MODERATOR">
-                  <PanelModerador auth={auth} />
-                </RutaProtegida>
-              }
-            />
-            {/* Ruta comodín: redirige a la página de inicio */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+    <ModalProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <div className="flex flex-col min-h-screen bg-background">
+          <NavBar auth={auth} onCerrarSesion={cerrarSesion} cantidadCarrito={cantidadCarrito} onActualizarAuth={iniciarSesion} />
+          <div className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login onIniciarSesion={iniciarSesion} />} />
+              <Route path="/registro" element={<Registro onIniciarSesion={iniciarSesion} />} />
+              <Route path="/productos" element={<Productos auth={auth} onActualizarCarrito={actualizarCarrito} />} />
+              <Route path="/productos/:id" element={<DetalleProducto auth={auth} onActualizarCarrito={actualizarCarrito} />} />
+              <Route
+                path="/carrito"
+                element={
+                  <RutaProtegida auth={auth}>
+                    <Carrito auth={auth} onActualizarCarrito={actualizarCarrito} />
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/vendedor"
+                element={
+                  <RutaProtegida auth={auth} rolRequerido={['VENDEDOR', 'ADMIN', 'MODERATOR']}>
+                    <PanelVendedor auth={auth} />
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/compras"
+                element={
+                  <RutaProtegida auth={auth}>
+                    <HistorialCompras auth={auth} />
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <RutaProtegida auth={auth} rolRequerido="ADMIN">
+                    <PanelAdmin auth={auth} />
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/moderador"
+                element={
+                  <RutaProtegida auth={auth} rolRequerido="MODERATOR">
+                    <PanelModerador auth={auth} />
+                  </RutaProtegida>
+                }
+              />
+              {/* Ruta comodín: redirige a la página de inicio */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ModalProvider>
   );
 }
-
 
 export default App;
