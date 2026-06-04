@@ -55,6 +55,15 @@ public class Usuario implements UserDetails {
     @JoinColumn(name = "rol_id", nullable = false)
     private Role rol;
 
+    @OneToMany(mappedBy = "vendedor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Producto> productos = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Carrito> carritos = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Orden> ordenes = new java.util.ArrayList<>();
+
     // ── UserDetails ───────────────────────────────────────────────────────────
 
     // SecurityConfig usa el nombre del rol con hasAuthority("VENDEDOR") / hasAuthority("COMPRADOR").

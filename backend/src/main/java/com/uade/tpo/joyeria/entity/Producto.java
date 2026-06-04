@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "productos")
@@ -45,4 +47,10 @@ public class Producto {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vendedor_id", nullable = false)
     private Usuario vendedor;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemCarrito> itemsCarrito = new ArrayList<>();
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DetalleOrden> detallesOrden = new ArrayList<>();
 }
