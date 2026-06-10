@@ -11,6 +11,7 @@ const favoritosSlice = createSlice({
     toggleFavoritoDeUsuario: (state, action) => {
       const { userId, producto } = action.payload;
       if (!userId) return;
+      if (!state.porUsuario) state.porUsuario = {};
 
       const lista = state.porUsuario[userId] || [];
       const index = lista.findIndex((item) => item.idProducto === producto.idProducto);
@@ -23,6 +24,7 @@ const favoritosSlice = createSlice({
     },
     limpiarFavoritos: (state, action) => {
       const userId = action.payload;
+      if (!state.porUsuario) state.porUsuario = {};
       if (userId) {
         state.porUsuario[userId] = [];
       }
@@ -38,9 +40,12 @@ export const toggleFavorito = (producto) => (dispatch, getState) => {
 };
 
 // Selector: favoritos del usuario logueado (lista vacía si no hay sesión)
+// Defensivo ante estados persistidos con forma antigua (sin porUsuario)
 const LISTA_VACIA = [];
-export const selectFavoritos = (state) =>
-  state.favoritos.porUsuario[state.auth.idUsuario] || LISTA_VACIA;
+export const selectFavoritos = (state) => {
+  const porUsuario = state.favoritos?.porUsuario || {};
+  return porUsuario[state.auth?.idUsuario] || LISTA_VACIA;
+};
 
 export const { limpiarFavoritos } = favoritosSlice.actions;
 export default favoritosSlice.reducer;

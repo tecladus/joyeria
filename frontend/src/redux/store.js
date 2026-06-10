@@ -38,6 +38,14 @@ const persistConfig = {
   key: 'root',
   storage,
   whitelist: ['auth', 'theme', 'favoritos'],
+  version: 1,
+  // Normaliza estados persistidos con formas antiguas para evitar crashes al rehidratar
+  migrate: (estadoPersistido) => {
+    if (estadoPersistido && estadoPersistido.favoritos && !estadoPersistido.favoritos.porUsuario) {
+      estadoPersistido.favoritos = { porUsuario: {} };
+    }
+    return Promise.resolve(estadoPersistido);
+  },
 };
 
 export const store = configureStore({

@@ -10,6 +10,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <script>
+      // Diagnóstico: con ?debug en la URL muestra errores JS en pantalla
+      (function () {
+        if (window.location.search.indexOf('debug') === -1) return;
+        function mostrar(titulo, detalle) {
+          var d = document.createElement('pre');
+          d.style.cssText = 'position:fixed;top:0;left:0;right:0;max-height:60vh;overflow:auto;background:#fff0f0;color:#990000;padding:16px;z-index:99999;white-space:pre-wrap;font:12px monospace;border-bottom:2px solid #990000;margin:0';
+          d.textContent = titulo + '\n' + detalle;
+          (document.body || document.documentElement).appendChild(d);
+        }
+        window.addEventListener('error', function (e) {
+          mostrar('ERROR: ' + (e.message || ''), (e.filename || '') + ':' + (e.lineno || '') + ((e.error && e.error.stack) ? '\n' + e.error.stack : ''));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason || {};
+          mostrar('PROMESA RECHAZADA: ' + (r.message || String(r)), r.stack || '');
+        });
+      })();
+    </script>
   </head>
   <body class="bg-background text-on-surface font-body-md overflow-x-hidden">
     <div id="root"></div>
