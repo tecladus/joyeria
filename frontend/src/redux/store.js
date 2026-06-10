@@ -9,7 +9,8 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+// Importar desde es/ (ESM): el build de lib/ (CommonJS) rompe el interop en el bundle de producción
+import storage from 'redux-persist/es/storage';
 import { configurarObtencionToken } from '../services/api';
 import authReducer from './slices/authSlice';
 import carritoReducer from './slices/carritoSlice';
