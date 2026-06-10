@@ -1,5 +1,46 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getPerfilUsuario } from '../../services/api';
+import {
+  getPerfilUsuario,
+  loginUsuario,
+  registrarUsuario,
+  convertirseEnVendedor,
+} from '../../services/api';
+
+// Thunk para iniciar sesión
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      return await loginUsuario(email, password);
+    } catch (error) {
+      return rejectWithValue(error.message || 'Credenciales incorrectas. Intenta de nuevo.');
+    }
+  }
+);
+
+// Thunk para registrar un nuevo usuario
+export const registro = createAsyncThunk(
+  'auth/registro',
+  async (datos, { rejectWithValue }) => {
+    try {
+      return await registrarUsuario(datos);
+    } catch (error) {
+      return rejectWithValue(error.message || 'No se pudo completar el registro. Intenta con otro email.');
+    }
+  }
+);
+
+// Thunk para convertir la cuenta en vendedor
+export const convertirEnVendedor = createAsyncThunk(
+  'auth/convertirEnVendedor',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await convertirseEnVendedor();
+    } catch (error) {
+      return rejectWithValue(error.message || 'Error al convertir la cuenta.');
+    }
+  }
+);
 
 // Thunk para cargar el perfil del usuario
 export const fetchPerfil = createAsyncThunk(
@@ -15,16 +56,28 @@ export const fetchPerfil = createAsyncThunk(
 );
 
 const initialState = {
-  token: localStorage.getItem('token') || null,
-  idUsuario: localStorage.getItem('idUsuario') || null,
-  rol: localStorage.getItem('rol') || null,
-  nombre: localStorage.getItem('nombre') || '',
-  apellido: localStorage.getItem('apellido') || '',
-  email: localStorage.getItem('email') || '',
-  direccion: localStorage.getItem('direccion') || '',
-  telefono: localStorage.getItem('telefono') || '',
+  token: null,
+  idUsuario: null,
+  rol: null,
+  nombre: '',
+  apellido: '',
+  email: '',
+  direccion: '',
+  telefono: '',
   cargandoPerfil: false,
   errorPerfil: null,
+};
+
+// Aplica los datos de sesión devueltos por el backend al estado
+const aplicarSesion = (state, datos) => {
+  state.token = datos.token;
+  state.idUsuario = String(datos.idUsuario);
+  state.rol = datos.rol;
+  state.nombre = datos.nombre || '';
+  state.apellido = datos.apellido || '';
+  state.email = datos.email || '';
+  state.direccion = datos.direccion || '';
+  state.telefono = datos.telefono || '';
 };
 
 const authSlice = createSlice({
@@ -32,24 +85,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     iniciarSesion: (state, action) => {
-      const datos = action.payload;
-      state.token = datos.token;
-      state.idUsuario = String(datos.idUsuario);
-      state.rol = datos.rol;
-      state.nombre = datos.nombre || '';
-      state.apellido = datos.apellido || '';
-      state.email = datos.email || '';
-      state.direccion = datos.direccion || '';
-      state.telefono = datos.telefono || '';
-
-      localStorage.setItem('token', datos.token);
-      localStorage.setItem('idUsuario', String(datos.idUsuario));
-      localStorage.setItem('rol', datos.rol);
-      localStorage.setItem('nombre', datos.nombre || '');
-      localStorage.setItem('apellido', datos.apellido || '');
-      localStorage.setItem('email', datos.email || '');
-      localStorage.setItem('direccion', datos.direccion || '');
-      localStorage.setItem('telefono', datos.telefono || '');
+      aplicarSesion(state, action.payload);
     },
     cerrarSesion: (state) => {
       state.token = null;
@@ -60,19 +96,19 @@ const authSlice = createSlice({
       state.email = '';
       state.direccion = '';
       state.telefono = '';
-
-      localStorage.removeItem('token');
-      localStorage.removeItem('idUsuario');
-      localStorage.removeItem('rol');
-      localStorage.removeItem('nombre');
-      localStorage.removeItem('apellido');
-      localStorage.removeItem('email');
-      localStorage.removeItem('direccion');
-      localStorage.removeItem('telefono');
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(login.fulfilled, (state, action) => {
+        aplicarSesion(state, action.payload);
+      })
+      .addCase(registro.fulfilled, (state, action) => {
+        aplicarSesion(state, action.payload);
+      })
+      .addCase(convertirEnVendedor.fulfilled, (state, action) => {
+        aplicarSesion(state, action.payload);
+      })
       .addCase(fetchPerfil.pending, (state) => {
         state.cargandoPerfil = true;
         state.errorPerfil = null;
@@ -85,12 +121,6 @@ const authSlice = createSlice({
         state.email = perfil.email || '';
         state.direccion = perfil.direccion || '';
         state.telefono = perfil.telefono || '';
-
-        localStorage.setItem('nombre', perfil.nombre || '');
-        localStorage.setItem('apellido', perfil.apellido || '');
-        localStorage.setItem('email', perfil.email || '');
-        localStorage.setItem('direccion', perfil.direccion || '');
-        localStorage.setItem('telefono', perfil.telefono || '');
       })
       .addCase(fetchPerfil.rejected, (state, action) => {
         state.cargandoPerfil = false;

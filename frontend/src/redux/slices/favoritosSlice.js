@@ -1,54 +1,46 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const getFavoritosFromStorage = (userId) => {
-  if (!userId) return [];
-  const key = `favoritos_${userId}`;
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveFavoritosToStorage = (userId, list) => {
-  if (!userId) return;
-  const key = `favoritos_${userId}`;
-  try {
-    localStorage.setItem(key, JSON.stringify(list));
-  } catch (e) {
-    console.error('Error saving favorites to localStorage', e);
-  }
-};
-
+// Favoritos por usuario: { [idUsuario]: [productos] }
+// La persistencia la maneja redux-persist (slice en whitelist), sin localStorage manual.
 const favoritosSlice = createSlice({
   name: 'favoritos',
   initialState: {
-    items: getFavoritosFromStorage(localStorage.getItem('idUsuario'))
+    porUsuario: {},
   },
   reducers: {
-    inicializarFavoritos: (state, action) => {
-      const userId = action.payload;
-      state.items = getFavoritosFromStorage(userId);
-    },
-    toggleFavorito: (state, action) => {
-      const producto = action.payload;
-      const userId = localStorage.getItem('idUsuario');
+    toggleFavoritoDeUsuario: (state, action) => {
+      const { userId, producto } = action.payload;
       if (!userId) return;
 
-      const index = state.items.findIndex(item => item.idProducto === producto.idProducto);
+      const lista = state.porUsuario[userId] || [];
+      const index = lista.findIndex((item) => item.idProducto === producto.idProducto);
       if (index >= 0) {
-        state.items.splice(index, 1);
+        lista.splice(index, 1);
       } else {
-        state.items.push(producto);
+        lista.push(producto);
       }
-      saveFavoritosToStorage(userId, state.items);
+      state.porUsuario[userId] = lista;
     },
-    limpiarFavoritos: (state) => {
-      state.items = [];
-    }
-  }
+    limpiarFavoritos: (state, action) => {
+      const userId = action.payload;
+      if (userId) {
+        state.porUsuario[userId] = [];
+      }
+    },
+  },
 });
 
-export const { inicializarFavoritos, toggleFavorito, limpiarFavoritos } = favoritosSlice.actions;
+// Thunk: obtiene el usuario actual desde el store y hace el toggle
+export const toggleFavorito = (producto) => (dispatch, getState) => {
+  const userId = getState().auth.idUsuario;
+  if (!userId) return;
+  dispatch(favoritosSlice.actions.toggleFavoritoDeUsuario({ userId, producto }));
+};
+
+// Selector: favoritos del usuario logueado (lista vacía si no hay sesión)
+const LISTA_VACIA = [];
+export const selectFavoritos = (state) =>
+  state.favoritos.porUsuario[state.auth.idUsuario] || LISTA_VACIA;
+
+export const { limpiarFavoritos } = favoritosSlice.actions;
 export default favoritosSlice.reducer;

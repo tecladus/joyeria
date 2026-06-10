@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// La persistencia del tema la maneja redux-persist (slice en whitelist)
 const initialState = {
-  theme: localStorage.getItem('theme') || 'system',
+  theme: 'system',
 };
 
 const themeSlice = createSlice({
@@ -10,7 +11,6 @@ const themeSlice = createSlice({
   reducers: {
     setTheme: (state, action) => {
       state.theme = action.payload;
-      localStorage.setItem('theme', action.payload);
     },
   },
 });

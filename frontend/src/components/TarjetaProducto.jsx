@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
-import { toggleFavorito } from '../redux/slices/favoritosSlice';
+import { toggleFavorito, selectFavoritos } from '../redux/slices/favoritosSlice';
 
 /* Formatea un número como precio en dólares */
 const formatearPrecio = (precio) =>
@@ -18,7 +18,7 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const favoritos = useSelector(selectFavoritos);
   const esFavorito = favoritos.some((item) => item.idProducto === producto.idProducto);
   const [errorImagen, setErrorImagen] = useState(false);
   const deviceMultiplier = useDeviceMultiplier();

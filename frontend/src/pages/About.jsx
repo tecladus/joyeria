@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { enviarContacto } from '../services/api';
+import { useSelector, useDispatch } from 'react-redux';
+import { enviarMensajeContacto } from '../redux/slices/contactoSlice';
 
 function About() {
   const location = useLocation();
+  const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const estaLogueado = !!auth.token;
 
@@ -72,10 +73,10 @@ function About() {
     setEnviando(true);
     setErrorContacto('');
     try {
-      await enviarContacto(formData);
+      await dispatch(enviarMensajeContacto(formData)).unwrap();
       setMostrarModalContacto(true);
     } catch (err) {
-      setErrorContacto(err.message || 'Error al enviar el mensaje. Intente de nuevo.');
+      setErrorContacto(err.message || err || 'Error al enviar el mensaje. Intente de nuevo.');
     } finally {
       setEnviando(false);
     }

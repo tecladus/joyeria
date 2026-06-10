@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { registrarUsuario } from '../services/api';
-import { iniciarSesion } from '../redux/slices/authSlice';
+import { registro } from '../redux/slices/authSlice';
 
 const FORM_INICIAL = {
   nombre: '',
@@ -40,11 +39,10 @@ function Registro() {
     }
     setCargando(true);
     try {
-      const datos = await registrarUsuario(form);
-      dispatch(iniciarSesion(datos));
+      await dispatch(registro(form)).unwrap();
       navigate('/productos');
     } catch (err) {
-      setError(err.message || 'No se pudo completar el registro. Intenta con otro email.');
+      setError(err.message || err || 'No se pudo completar el registro. Intenta con otro email.');
     } finally {
       setCargando(false);
     }

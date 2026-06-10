@@ -1,4 +1,16 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import { configurarObtencionToken } from '../services/api';
 import authReducer from './slices/authSlice';
 import carritoReducer from './slices/carritoSlice';
 import themeReducer from './slices/themeSlice';
@@ -7,16 +19,38 @@ import productosReducer from './slices/productosSlice';
 import categoriasReducer from './slices/categoriasSlice';
 import ordenesReducer from './slices/ordenesSlice';
 import usuariosReducer from './slices/usuariosSlice';
+import contactoReducer from './slices/contactoSlice';
+
+const rootReducer = combineReducers({
+  auth: authReducer,
+  carrito: carritoReducer,
+  theme: themeReducer,
+  favoritos: favoritosReducer,
+  productos: productosReducer,
+  categorias: categoriasReducer,
+  ordenes: ordenesReducer,
+  usuarios: usuariosReducer,
+  contacto: contactoReducer,
+});
+
+// Solo se persisten sesión, tema y favoritos; el resto se vuelve a pedir al backend
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['auth', 'theme', 'favoritos'],
+};
 
 export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    carrito: carritoReducer,
-    theme: themeReducer,
-    favoritos: favoritosReducer,
-    productos: productosReducer,
-    categorias: categoriasReducer,
-    ordenes: ordenesReducer,
-    usuarios: usuariosReducer,
-  },
+  reducer: persistReducer(persistConfig, rootReducer),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }),
 });
+
+export const persistor = persistStore(store);
+
+// El interceptor de axios obtiene el token desde el store (sin localStorage manual)
+configurarObtencionToken(() => store.getState().auth.token);

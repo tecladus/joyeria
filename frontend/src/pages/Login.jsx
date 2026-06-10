@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { loginUsuario } from '../services/api';
-import { iniciarSesion } from '../redux/slices/authSlice';
+import { login } from '../redux/slices/authSlice';
 
 function Login() {
   const navigate = useNavigate();
@@ -24,11 +23,10 @@ function Login() {
     }
     setCargando(true);
     try {
-      const datos = await loginUsuario(form.email, form.password);
-      dispatch(iniciarSesion(datos));
+      await dispatch(login({ email: form.email, password: form.password })).unwrap();
       navigate('/productos');
     } catch (err) {
-      setError(err.message || 'Credenciales incorrectas. Intenta de nuevo.');
+      setError(err.message || err || 'Credenciales incorrectas. Intenta de nuevo.');
     } finally {
       setCargando(false);
     }

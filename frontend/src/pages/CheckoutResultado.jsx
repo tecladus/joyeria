@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { confirmarPagoOrden } from '../services/api';
+import { useDispatch } from 'react-redux';
+import { confirmarPago } from '../redux/slices/ordenesSlice';
 
 function CheckoutResultado() {
+  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const status = searchParams.get('status');
   const externalReference = searchParams.get('external_reference');
@@ -22,19 +24,19 @@ function CheckoutResultado() {
       return;
     }
 
-    const confirmarPago = async () => {
+    const procesarConfirmacion = async () => {
       try {
-        const res = await confirmarPagoOrden(externalReference, status || 'approved');
+        const res = await dispatch(confirmarPago({ ordenId: externalReference, status: status || 'approved' })).unwrap();
         setOrden(res);
       } catch (err) {
-        setError(err.message || 'Ocurrió un error al procesar el pago.');
+        setError(err.message || err || 'Ocurrió un error al procesar el pago.');
       } finally {
         setCargando(false);
       }
     };
 
-    confirmarPago();
-  }, [externalReference, status]);
+    procesarConfirmacion();
+  }, [externalReference, status, dispatch]);
 
   if (cargando) {
     return (

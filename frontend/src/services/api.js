@@ -8,6 +8,13 @@ const api = axios.create({
   baseURL: BASE_URL,
 });
 
+// Función inyectada desde el store para obtener el token de Redux
+// (evita dependencias circulares y el uso manual de localStorage)
+let obtenerToken = () => null;
+export const configurarObtencionToken = (fn) => {
+  obtenerToken = fn;
+};
+
 /* Maneja la respuesta de error de axios: extrae el mensaje adecuado y lo traduce si es genérico */
 const manejarErrorAxios = (error) => {
   let mensajeError = '';
@@ -82,7 +89,7 @@ api.interceptors.request.use(
 
     const conAuth = config.conAuth !== false;
     if (conAuth) {
-      const token = localStorage.getItem('token');
+      const token = obtenerToken();
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
       }

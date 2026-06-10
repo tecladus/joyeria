@@ -2,8 +2,51 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   getOrdenes,
   getTodasLasOrdenes,
-  actualizarEstadoOrden
+  actualizarEstadoOrden,
+  hacerCheckout,
+  crearPreferenciaPago,
+  confirmarPagoOrden
 } from '../../services/api';
+
+// Thunk para concretar el checkout del carrito
+export const checkout = createAsyncThunk(
+  'ordenes/checkout',
+  async ({ idUsuario, datosCheckout }, { rejectWithValue }) => {
+    try {
+      return await hacerCheckout(idUsuario, datosCheckout);
+    } catch (error) {
+      return rejectWithValue(error.message || 'Error al procesar el pedido.');
+    }
+  }
+);
+
+// Thunk para crear la preferencia de pago de Mercado Pago
+export const crearPreferencia = createAsyncThunk(
+  'ordenes/crearPreferencia',
+  async ({ idUsuario, datosCheckout }, { rejectWithValue }) => {
+    try {
+      const res = await crearPreferenciaPago(idUsuario, datosCheckout);
+      if (!res || !res.initPoint) {
+        return rejectWithValue('No se pudo generar la preferencia de pago de Mercado Pago.');
+      }
+      return res;
+    } catch (error) {
+      return rejectWithValue(error.message || 'No se pudo generar la preferencia de pago de Mercado Pago.');
+    }
+  }
+);
+
+// Thunk para confirmar el pago de una orden (retorno de Mercado Pago)
+export const confirmarPago = createAsyncThunk(
+  'ordenes/confirmarPago',
+  async ({ ordenId, status }, { rejectWithValue }) => {
+    try {
+      return await confirmarPagoOrden(ordenId, status);
+    } catch (error) {
+      return rejectWithValue(error.message || 'Ocurrió un error al procesar el pago.');
+    }
+  }
+);
 
 export const fetchOrdenes = createAsyncThunk(
   'ordenes/fetchOrdenes',

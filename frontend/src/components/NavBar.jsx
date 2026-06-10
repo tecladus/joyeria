@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { convertirseEnVendedor } from '../services/api';
 import { useModal } from './ModalContext';
-import { iniciarSesion, cerrarSesion } from '../redux/slices/authSlice';
+import { cerrarSesion, convertirEnVendedor } from '../redux/slices/authSlice';
+import { selectFavoritos } from '../redux/slices/favoritosSlice';
 import SelectorTema from './SelectorTema';
 
 function NavBar() {
@@ -14,7 +14,7 @@ function NavBar() {
 
   const auth = useSelector((state) => state.auth);
   const cantidadCarrito = useSelector((state) => state.carrito.cantidadCarrito);
-  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const favoritos = useSelector(selectFavoritos);
   const cantidadFavoritos = favoritos.length;
 
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
@@ -41,8 +41,7 @@ function NavBar() {
     );
     if (!confirmado) return;
     try {
-      const datos = await convertirseEnVendedor();
-      dispatch(iniciarSesion(datos));
+      await dispatch(convertirEnVendedor()).unwrap();
       setDropdownAbierto(false);
       setMenuMovilAbierto(false);
       navigate('/vendedor');

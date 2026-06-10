@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { getCarrito, modificarCantidadItem, eliminarDelCarrito, hacerCheckout, crearPreferenciaPago } from '../services/api';
 import CarritoItem from '../components/CarritoItem';
-import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { fetchCarrito, cambiarCantidadItem, quitarItemDelCarrito } from '../redux/slices/carritoSlice';
+import { checkout, crearPreferencia } from '../redux/slices/ordenesSlice';
 import { adjustPriceByDevice, deviceDetector } from '../services/deviceDetection';
 
 const formatearPrecio = (precio) =>
@@ -13,9 +13,7 @@ function Carrito() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const [carrito, setCarrito] = useState(null);
-  const [cargando, setCargando] = useState(true);
-  const [operando, setOperando] = useState(false);
+  const { carrito, cargando, operando, error: errorCarrito } = useSelector((state) => state.carrito);
   const [error, setError] = useState('');
   const [checkoutExitoso, setCheckoutExitoso] = useState(false);
   const [inicializado, setInicializado] = useState(false);
@@ -52,57 +50,26 @@ function Carrito() {
     }
   }, [auth, inicializado]);
 
-  const cargarCarrito = useCallback(async () => {
-    setCargando(true);
-    setError('');
-    try {
-      const datos = await getCarrito(auth.idUsuario);
-      setCarrito(datos);
-      const total = datos?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      dispatch(setCantidadCarrito(total));
-    } catch (err) {
-      setError(err.message || 'No se pudo cargar el carrito.');
-    } finally {
-      setCargando(false);
-    }
-  }, [auth.idUsuario, dispatch]);
-
   useEffect(() => {
-    cargarCarrito();
-  }, [cargarCarrito]);
+    dispatch(fetchCarrito(auth.idUsuario));
+  }, [auth.idUsuario, dispatch]);
 
   const handleCambiarCantidad = async (itemId, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
-    setOperando(true);
     setError('');
     try {
-      const actualizado = await modificarCantidadItem(itemId, auth.idUsuario, nuevaCantidad);
-      setCarrito(actualizado);
-      const total = actualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      dispatch(setCantidadCarrito(total));
+      await dispatch(cambiarCantidadItem({ itemId, idUsuario: auth.idUsuario, cantidad: nuevaCantidad })).unwrap();
     } catch (err) {
-      setError(err.message || 'Error al modificar la cantidad.');
-    } finally {
-      setOperando(false);
+      setError(err.message || err || 'Error al modificar la cantidad.');
     }
   };
 
   const handleEliminar = async (itemId) => {
-    setOperando(true);
     setError('');
     try {
-      const actualizado = await eliminarDelCarrito(itemId, auth.idUsuario);
-      if (actualizado) {
-        setCarrito(actualizado);
-        const total = actualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-        dispatch(setCantidadCarrito(total));
-      } else {
-        await cargarCarrito();
-      }
+      await dispatch(quitarItemDelCarrito({ itemId, idUsuario: auth.idUsuario })).unwrap();
     } catch (err) {
-      setError(err.message || 'Error al eliminar el producto.');
-    } finally {
-      setOperando(false);
+      setError(err.message || err || 'Error al eliminar el producto.');
     }
   };
 
@@ -133,7 +100,6 @@ function Carrito() {
       }
     }
 
-    setOperando(true);
     setError('');
     try {
       const datosCheckout = {
@@ -147,23 +113,15 @@ function Carrito() {
       };
 
       if (metodoPago === 'mercadopago') {
-        const res = await crearPreferenciaPago(auth.idUsuario, datosCheckout);
-        if (res && res.initPoint) {
-          dispatch(setCantidadCarrito(0));
-          window.location.href = res.initPoint;
-          return;
-        } else {
-          throw new Error('No se pudo generar la preferencia de pago de Mercado Pago.');
-        }
+        const res = await dispatch(crearPreferencia({ idUsuario: auth.idUsuario, datosCheckout })).unwrap();
+        window.location.href = res.initPoint;
+        return;
       }
 
-      await hacerCheckout(auth.idUsuario, datosCheckout);
+      await dispatch(checkout({ idUsuario: auth.idUsuario, datosCheckout })).unwrap();
       setCheckoutExitoso(true);
-      dispatch(setCantidadCarrito(0));
     } catch (err) {
-      setError(err.message || 'Error al procesar el pedido.');
-    } finally {
-      setOperando(false);
+      setError(err.message || err || 'Error al procesar el pedido.');
     }
   };
 
@@ -195,9 +153,9 @@ function Carrito() {
           </p>
         </div>
 
-        {error && (
+        {(error || errorCarrito) && (
           <div className="bg-error-container border border-error text-on-error-container p-4 rounded-xl mb-8 font-body-md">
-            {error}
+            {error || errorCarrito}
           </div>
         )}
 

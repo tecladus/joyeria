@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
-import { setCantidadCarrito } from '../redux/slices/carritoSlice';
-import { toggleFavorito } from '../redux/slices/favoritosSlice';
+import { agregarProductoAlCarrito } from '../redux/slices/carritoSlice';
+import { toggleFavorito, selectFavoritos } from '../redux/slices/favoritosSlice';
 import { fetchProductoPorId, fetchProductos, limpiarItemSeleccionado } from '../redux/slices/productosSlice';
 
 const formatearPrecio = (precio) =>
@@ -28,7 +27,7 @@ function DetalleProducto() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const favoritos = useSelector(selectFavoritos);
   const deviceMultiplier = useDeviceMultiplier();
 
   const { itemSeleccionado: producto, cargando, error: errorProducto, items: todosLosProductos } = useSelector((state) => state.productos);
@@ -100,13 +99,11 @@ function DetalleProducto() {
     setAgregando(true);
     setError('');
     try {
-      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, targetProductoId, 1);
-      const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      dispatch(setCantidadCarrito(nuevoTotal));
+      await dispatch(agregarProductoAlCarrito({ idUsuario: auth.idUsuario, productoId: targetProductoId, cantidad: 1 })).unwrap();
       setMensajeExito('Producto agregado al carrito con éxito');
       setTimeout(() => setMensajeExito(''), 3000);
     } catch (err) {
-      setError(err.message || 'Error al agregar al carrito.');
+      setError(err.message || err || 'Error al agregar al carrito.');
     } finally {
       setAgregando(false);
     }

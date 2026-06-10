@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import TarjetaProducto from '../components/TarjetaProducto';
-import { agregarAlCarrito } from '../services/api';
-import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { agregarProductoAlCarrito } from '../redux/slices/carritoSlice';
+import { selectFavoritos } from '../redux/slices/favoritosSlice';
 
 function Favoritos() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
-  const favoritos = useSelector((state) => state.favoritos.items || []);
+  const favoritos = useSelector(selectFavoritos);
 
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
@@ -44,12 +44,10 @@ function Favoritos() {
       return;
     }
     try {
-      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, productoId, 1);
-      const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      dispatch(setCantidadCarrito(nuevoTotal));
+      await dispatch(agregarProductoAlCarrito({ idUsuario: auth.idUsuario, productoId, cantidad: 1 })).unwrap();
       setToast('Producto agregado al carrito con éxito');
     } catch (err) {
-      setError(err.message || 'Error al agregar al carrito');
+      setError(err.message || err || 'Error al agregar al carrito');
     }
   };
 

@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { agregarAlCarrito } from '../services/api';
 import TarjetaProducto from '../components/TarjetaProducto';
-import { setCantidadCarrito } from '../redux/slices/carritoSlice';
+import { agregarProductoAlCarrito } from '../redux/slices/carritoSlice';
 import { fetchProductos } from '../redux/slices/productosSlice';
 import { fetchCategorias } from '../redux/slices/categoriasSlice';
 
@@ -80,12 +79,10 @@ function Productos() {
   const handleAgregarCarrito = async (productoId) => {
     if (!auth?.token || !auth?.idUsuario) return;
     try {
-      const carritoActualizado = await agregarAlCarrito(auth.idUsuario, productoId, 1);
-      const nuevoTotal = carritoActualizado?.items?.reduce((s, i) => s + i.cantidad, 0) || 0;
-      dispatch(setCantidadCarrito(nuevoTotal));
+      await dispatch(agregarProductoAlCarrito({ idUsuario: auth.idUsuario, productoId, cantidad: 1 })).unwrap();
       mostrarToast('Producto agregado al carrito con éxito');
     } catch (err) {
-      mostrarToast(err.message || 'Error al agregar al carrito');
+      mostrarToast(err.message || err || 'Error al agregar al carrito');
     }
   };
 

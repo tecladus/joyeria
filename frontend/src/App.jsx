@@ -18,8 +18,7 @@ import HistorialCompras from './pages/HistorialCompras';
 import PanelAdmin from './pages/PanelAdmin';
 import PanelModerador from './pages/PanelModerador';
 import { fetchPerfil } from './redux/slices/authSlice';
-import { fetchCantidadCarrito } from './redux/slices/carritoSlice';
-import { inicializarFavoritos, limpiarFavoritos } from './redux/slices/favoritosSlice';
+import { fetchCarrito } from './redux/slices/carritoSlice';
 import Favoritos from './pages/Favoritos';
 import CheckoutResultado from './pages/CheckoutResultado';
 
@@ -60,10 +59,10 @@ function App() {
     }
   }, [theme]);
 
-  // Al montar y cuando cambia el auth, carga la cantidad del carrito si está autenticado
+  // Al montar y cuando cambia el auth, carga el carrito si está autenticado
   useEffect(() => {
     if (auth.token && auth.idUsuario) {
-      dispatch(fetchCantidadCarrito(auth.idUsuario));
+      dispatch(fetchCarrito(auth.idUsuario));
     }
   }, [auth.token, auth.idUsuario, dispatch]);
 
@@ -73,15 +72,6 @@ function App() {
       dispatch(fetchPerfil());
     }
   }, [auth.token, auth.nombre, dispatch]);
-
-  // Sincronizar favoritos cuando cambia de usuario
-  useEffect(() => {
-    if (auth.idUsuario) {
-      dispatch(inicializarFavoritos(auth.idUsuario));
-    } else {
-      dispatch(limpiarFavoritos());
-    }
-  }, [auth.idUsuario, dispatch]);
 
   return (
     <ModalProvider>
