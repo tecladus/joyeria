@@ -249,3 +249,35 @@ export const convertirseEnVendedor = async () => {
 export const enviarContacto = async (datosContacto) => {
   return api.post('/contacto', datosContacto, { conAuth: false });
 };
+
+// ========================
+//      PRODE MUNDIAL
+// ========================
+
+export const getPartidosProde = async () => {
+  return api.get('/prode/partidos', { conAuth: false });
+};
+
+export const getRankingProde = async () => {
+  return api.get('/prode/ranking', { conAuth: false });
+};
+
+export const getParticipanteProde = async (alias) => {
+  return api.get(`/prode/participantes/${encodeURIComponent(alias)}`, { conAuth: false });
+};
+
+// Requiere sesión: recupera el participante del usuario logueado (con su clave de edición).
+export const getMiParticipanteProde = async () => {
+  return api.get('/prode/mi-participante');
+};
+
+// Guarda los pronósticos. No fuerza conAuth: si hay token se envía (para vincular la cuenta),
+// si no hay sesión, el guardado es anónimo identificado por alias + clave de edición.
+export const guardarPrediccionesProde = async (datos) => {
+  return api.post('/prode/predicciones', datos);
+};
+
+// Solo ADMIN/MODERATOR: carga el resultado real de un partido.
+export const cargarResultadoProde = async (partidoId, golesLocal, golesVisitante) => {
+  return api.put(`/prode/partidos/${partidoId}/resultado`, { golesLocal, golesVisitante });
+};

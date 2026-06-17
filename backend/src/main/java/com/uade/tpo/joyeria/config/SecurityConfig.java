@@ -89,6 +89,15 @@ public class SecurityConfig {
                 // Lectura de productos: publico sin token.
                 .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
 
+                // Prode del Mundial: cargar el resultado real es solo ADMIN/MODERATOR.
+                .requestMatchers(HttpMethod.PUT, "/api/prode/partidos/*/resultado").hasAnyAuthority("ADMIN", "MODERATOR")
+                // Recuperar el propio participante requiere sesion.
+                .requestMatchers(HttpMethod.GET, "/api/prode/mi-participante").authenticated()
+                // Ver partidos, ranking, pronosticos por alias y guardar pronosticos: publico.
+                // (El guardado detecta al usuario logueado por el token si lo envia.)
+                .requestMatchers(HttpMethod.GET, "/api/prode/partidos", "/api/prode/ranking", "/api/prode/participantes/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/prode/predicciones").permitAll()
+
                 // Cualquier otro endpoint requiere autenticacion.
                 .anyRequest().authenticated()
             )

@@ -21,6 +21,15 @@ import categoriasReducer from './slices/categoriasSlice';
 import ordenesReducer from './slices/ordenesSlice';
 import usuariosReducer from './slices/usuariosSlice';
 import contactoReducer from './slices/contactoSlice';
+import prodeReducer from './slices/prodeSlice';
+
+// Del prode solo se persiste la identidad del jugador (alias + clave de edición),
+// para que pueda seguir editando sus pronósticos al volver. El resto se vuelve a pedir.
+const prodePersistConfig = {
+  key: 'prode',
+  storage,
+  whitelist: ['miAlias', 'miClave'],
+};
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -32,6 +41,7 @@ const rootReducer = combineReducers({
   ordenes: ordenesReducer,
   usuarios: usuariosReducer,
   contacto: contactoReducer,
+  prode: persistReducer(prodePersistConfig, prodeReducer),
 });
 
 // Solo se persisten sesión, tema y favoritos; el resto se vuelve a pedir al backend

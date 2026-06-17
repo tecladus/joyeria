@@ -21,6 +21,7 @@ import { fetchPerfil } from './redux/slices/authSlice';
 import { fetchCarrito } from './redux/slices/carritoSlice';
 import Favoritos from './pages/Favoritos';
 import CheckoutResultado from './pages/CheckoutResultado';
+import Prode from './pages/Prode';
 
 function App() {
   const dispatch = useDispatch();
@@ -87,6 +88,7 @@ function App() {
               <Route path="/registro" element={<Registro />} />
               <Route path="/productos" element={<Productos />} />
               <Route path="/productos/:id" element={<DetalleProducto />} />
+              <Route path="/prode" element={<Prode />} />
               <Route
                 path="/favoritos"
                 element={
