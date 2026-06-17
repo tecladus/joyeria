@@ -101,17 +101,6 @@ function NavBar() {
             Catálogo
           </Link>
           <Link
-            to="/prode"
-            className={`font-label-caps text-label-caps tracking-wider transition-colors duration-300 pb-1 flex items-center gap-1 ${
-              linkActivo('/prode')
-                ? 'text-primary border-b border-primary'
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">sports_soccer</span>
-            Prode
-          </Link>
-          <Link
             to="/about"
             className={`font-label-caps text-label-caps tracking-wider transition-colors duration-300 pb-1 ${
               linkActivo('/about') && !location.hash
@@ -365,14 +354,6 @@ function NavBar() {
             className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
           >
             Catálogo
-          </Link>
-          <Link
-            to="/prode"
-            onClick={() => setMenuMovilAbierto(false)}
-            className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-base">sports_soccer</span>
-            Prode Mundial
           </Link>
           <Link
             to="/about"
