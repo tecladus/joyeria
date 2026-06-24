@@ -101,6 +101,16 @@ function NavBar() {
             Catálogo
           </Link>
           <Link
+            to="/embajadores"
+            className={`font-label-caps text-label-caps tracking-wider transition-colors duration-300 pb-1 ${
+              linkActivo('/embajadores')
+                ? 'text-primary border-b border-primary'
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            Embajadores
+          </Link>
+          <Link
             to="/about"
             className={`font-label-caps text-label-caps tracking-wider transition-colors duration-300 pb-1 ${
               linkActivo('/about') && !location.hash
@@ -354,6 +364,13 @@ function NavBar() {
             className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
           >
             Catálogo
+          </Link>
+          <Link
+            to="/embajadores"
+            onClick={() => setMenuMovilAbierto(false)}
+            className="font-label-caps text-label-caps text-on-surface-variant py-2 border-b border-outline-variant/5 text-left"
+          >
+            Embajadores
           </Link>
           <Link
             to="/about"

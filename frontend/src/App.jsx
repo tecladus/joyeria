@@ -8,6 +8,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { ModalProvider } from './components/ModalContext';
 import Home from './pages/Home';
 import About from './pages/About';
+import Embajadores from './pages/Embajadores';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Productos from './pages/Productos';
@@ -83,6 +84,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
+              <Route path="/embajadores" element={<Embajadores />} />
               <Route path="/login" element={<Login />} />
               <Route path="/registro" element={<Registro />} />
               <Route path="/productos" element={<Productos />} />
