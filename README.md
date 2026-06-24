@@ -1,4 +1,4 @@
-# Atelier Aura - Joyería Fina
+# Atelier Aura - Joyería Final
 ### Trabajo Práctico Obligatorio (TPO) - UADE (Año 2026, 1er Cuatrimestre)
 
 ---

@@ -4,17 +4,30 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  * ─────────────────────────────────────────────────────────────────────────────
  *  EMBAJADORES DE AURA  ·  Carrusel de testimonios
  * ─────────────────────────────────────────────────────────────────────────────
- *  CÓMO AGREGAR LAS FOTOS DE CADA FAMOSO:
+ *  CÓMO AGREGAR / CAMBIAR LAS FOTOS:
  *  1) Poné la imagen en  frontend/public/embajadores/  (ej: messi.jpg)
  *     y usá la ruta:      foto: '/embajadores/messi.jpg'
  *     — o pegá directamente una URL externa:  foto: 'https://...'
- *  2) Mientras 'foto' esté vacío ('') se muestra un placeholder elegante.
+ *  2) Si 'foto' queda vacío ('') se muestra un placeholder elegante.
  *
- *  NOTA ACADÉMICA: las personas son reales pero las citas, piezas y la
- *  asociación con la marca son FICTICIAS, creadas para el TPO de UADE.
+ *  El PRIMER slide muestra el VIDEO de campaña acompañado del testimonio de
+ *  Mirtha Legrand (constante MIRTHA, abajo). El video no lleva foto.
+ *
+ *  NOTA ACADÉMICA: las personas son reales, pero los testimonios, las piezas y
+ *  su asociación con la marca son FICTICIOS, creados para el TPO de UADE.
  *  El aviso aparece al pie de la página.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+// Testimonio que acompaña al video de campaña (primer slide).
+const MIRTHA = {
+  nombre: 'Mirtha Legrand',
+  titulo: 'Diva de la Televisión Argentina',
+  ubicacion: 'Buenos Aires, Argentina',
+  pieza: 'Aderezo «Gran Gala» · Esmeraldas',
+  cita: 'Siempre dije que como te ven, te tratan. Con una pieza de Aura, una entra a cualquier salón ya vestida de luz.',
+};
+
 const EMBAJADORES = [
   {
     nombre: 'Lionel Messi',
@@ -22,7 +35,7 @@ const EMBAJADORES = [
     ubicacion: 'Rosario, Argentina',
     pieza: 'Sello «Eterno» · Oro 18k',
     cita: 'Buscaba algo que no gritara, que simplemente estuviera ahí, como las cosas que de verdad importan. La pieza de Aura tiene esa serenidad.',
-    foto: '',
+    foto: '/embajadores/messi.jpg',
   },
   {
     nombre: 'Tini Stoessel',
@@ -30,7 +43,7 @@ const EMBAJADORES = [
     ubicacion: 'Buenos Aires, Argentina',
     pieza: 'Collar «Aurora» · Diamantes',
     cita: 'Subo a un escenario para miles de personas, pero la joya de Aura la elijo para mí. Es mi pequeño secreto de luz.',
-    foto: '',
+    foto: '/embajadores/tini.jpg',
   },
   {
     nombre: 'Ricardo Darín',
@@ -38,7 +51,15 @@ const EMBAJADORES = [
     ubicacion: 'Buenos Aires, Argentina',
     pieza: 'Gemelos «Monserrat» · Platino',
     cita: 'A cierta edad uno valora lo que perdura. Aura entiende que la elegancia no es ruido: es permanencia.',
-    foto: '',
+    foto: '/embajadores/darin.jpg',
+  },
+  {
+    nombre: 'Ricardo Fort',
+    titulo: 'Empresario & Mediático',
+    ubicacion: 'Buenos Aires, Argentina',
+    pieza: 'Cadena «Comandante» · Oro 18k y diamantes',
+    cita: 'Tuve todo lo que el dinero puede comprar. Aura es de lo poco que todavía logra sorprenderme: lujo de verdad, sin pedir permiso.',
+    foto: '/embajadores/fort.jpg',
   },
   {
     nombre: 'Úrsula Corberó',
@@ -46,7 +67,7 @@ const EMBAJADORES = [
     ubicacion: 'Barcelona, España',
     pieza: 'Aros «Cascada» · Diamantes',
     cita: 'Me probé docenas de piezas para la alfombra roja. Solo una se sintió como piel propia: la de Aura.',
-    foto: '',
+    foto: '/embajadores/ursula.jpg',
   },
   {
     nombre: 'Zendaya',
@@ -54,7 +75,7 @@ const EMBAJADORES = [
     ubicacion: 'California, EE. UU.',
     pieza: 'Pulsera «Manifiesto» · Oro blanco',
     cita: 'Una joya debería sentirse como armadura y poesía a la vez. Aura encontró ese equilibrio exacto.',
-    foto: '',
+    foto: '/embajadores/zendaya.jpg',
   },
   {
     nombre: 'Roger Federer',
@@ -62,7 +83,7 @@ const EMBAJADORES = [
     ubicacion: 'Basilea, Suiza',
     pieza: 'Reloj-joya «Mérito» · Platino',
     cita: 'La precisión es un arte silencioso. Reconocí en Aura la misma obsesión por el detalle perfecto.',
-    foto: '',
+    foto: '/embajadores/federer.jpg',
   },
 ];
 
@@ -71,7 +92,7 @@ const DURACION_VIDEO = 18000;
 const DURACION_SLIDE = 6500;
 
 function Embajadores() {
-  // Slide 0 = video de campaña. Slides 1..N = testimonios.
+  // Slide 0 = video de campaña + Mirtha. Slides 1..N = testimonios.
   const total = EMBAJADORES.length + 1;
   const [actual, setActual] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
@@ -141,8 +162,8 @@ function Embajadores() {
                 transition: 'transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
-              {/* SLIDE 0 — Video de campaña */}
-              <SlideVideo activo={actual === 0} />
+              {/* SLIDE 0 — Video de campaña + testimonio de Mirtha */}
+              <SlideVideo activo={actual === 0} persona={MIRTHA} />
 
               {/* SLIDES 1..N — Testimonios */}
               {EMBAJADORES.map((emb) => (
@@ -210,8 +231,8 @@ function Embajadores() {
   );
 }
 
-/* ── Slide del video de campaña ───────────────────────────────────────────── */
-function SlideVideo({ activo }) {
+/* ── Slide 0: video de campaña (grande) + testimonio de Mirtha ────────────── */
+function SlideVideo({ activo, persona }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -227,17 +248,10 @@ function SlideVideo({ activo }) {
 
   return (
     <div className="w-full flex-shrink-0 flex items-center justify-center px-1">
-      <div className="flex flex-col items-center text-center gap-7 w-full">
-        <div className="space-y-2">
-          <span className="font-label-caps text-label-caps text-primary tracking-widest uppercase block text-xs">
-            La Campaña
-          </span>
-          <h2 className="font-display-lg text-3xl md:text-4xl text-on-surface font-light">
-            Aura en Movimiento
-          </h2>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-10 lg:gap-14 items-center w-full max-w-6xl">
 
-        <div className="relative w-full max-w-[440px] aspect-square rounded-xl overflow-hidden border border-outline-variant/15 luxury-shadow">
+        {/* Video de campaña — protagonista (3/5 del ancho en desktop) */}
+        <div className="md:col-span-3 relative w-full max-w-[640px] mx-auto aspect-square overflow-hidden rounded-xl border border-outline-variant/15 luxury-shadow">
           <video
             ref={videoRef}
             src="/aura-embajadores.mp4"
@@ -248,12 +262,33 @@ function SlideVideo({ activo }) {
             playsInline
             controls
           />
+          <span className="absolute top-4 left-4 font-label-caps text-[10px] tracking-widest uppercase bg-background/80 backdrop-blur-sm text-primary px-3 py-1.5 rounded-full border border-outline-variant/20 pointer-events-none">
+            Campaña Aura
+          </span>
         </div>
 
-        <p className="font-body-md text-secondary max-w-md font-light text-sm leading-relaxed">
-          La pieza audiovisual que dio inicio a nuestra colaboración con figuras
-          que comparten el mismo lenguaje: elegancia que no necesita explicarse.
-        </p>
+        {/* Testimonio de Mirtha Legrand (2/5 del ancho) */}
+        <div className="md:col-span-2 text-center md:text-left">
+          <span className="font-display-lg text-7xl text-primary/20 leading-none block mb-2 select-none">
+            &ldquo;
+          </span>
+          <blockquote className="font-display-lg text-2xl md:text-[26px] text-on-surface font-light leading-snug mb-8">
+            {persona.cita}
+          </blockquote>
+
+          <div className="w-10 h-[1px] bg-primary mb-5 mx-auto md:mx-0"></div>
+
+          <p className="font-headline-md text-headline-md text-on-surface mb-1">
+            {persona.nombre}
+          </p>
+          <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-xs mb-4">
+            {persona.titulo} · {persona.ubicacion}
+          </p>
+          <p className="font-label-caps text-[11px] text-primary tracking-wider uppercase inline-flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm">diamond</span>
+            {persona.pieza}
+          </p>
+        </div>
       </div>
     </div>
   );
