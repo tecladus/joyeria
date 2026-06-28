@@ -1,14 +1,17 @@
 /*
- * Mensajes de urgencia / escasez para incentivar la compra.
+ * Carteles de urgencia / escasez para incentivar la compra.
  *
- * Combina dos fuentes:
- *   - Automática: stock real bajo y descuento activo (siempre verídico).
- *   - Manual: el sello que el vendedor/admin asigna al producto (MUY_SOLICITADO, EDICION_LIMITADA).
+ * Son DOS carteles independientes (pueden aparecer juntos en un mismo producto):
  *
- * Se muestra UN solo mensaje por producto, según la prioridad de abajo, para no saturar la tarjeta.
+ *   1. Escasez (rojo, AUTOMÁTICO): aparece solo cuando el stock real es > 0 y <= UMBRAL_STOCK_BAJO.
+ *      Siempre muestra el stock real (ej. "¡Solo quedan 3!"), nunca un número fijo.
+ *
+ *   2. Sello promocional (cinta superior, MANUAL): lo asigna el vendedor/admin a cada producto
+ *      (MUY_SOLICITADO o EDICION_LIMITADA). Si no hay sello manual pero el producto tiene
+ *      descuento, cae al aviso de "Oferta por tiempo limitado".
  */
 
-// Umbral de "pocas unidades": stock <= a este valor (y > 0) muestra el aviso de escasez real.
+// Umbral de "pocas unidades": el cartel rojo aparece con stock <= a este valor (y > 0).
 export const UMBRAL_STOCK_BAJO = 5;
 
 // Opciones para los <select> de los paneles de admin / vendedor.
@@ -19,30 +22,37 @@ export const SELLOS_URGENCIA = [
 ];
 
 /*
- * Devuelve el mensaje de urgencia a mostrar para un producto, o null si no corresponde.
- * El objeto devuelto trae: { texto, icono, clases } donde:
- *   - texto:  string a mostrar.
- *   - icono:  nombre de un Material Symbol.
- *   - clases: clases de color/borde (Tailwind con tokens del proyecto). El layout/tamaño
- *             lo agrega cada componente para adaptarse a la tarjeta o al detalle.
+ * Cartel ROJO de escasez (automático).
+ * Devuelve null salvo que el stock real sea > 0 y <= UMBRAL_STOCK_BAJO.
+ * El texto usa el stock real del producto.
  */
-export function obtenerMensajeUrgencia(producto) {
+export function obtenerBadgeEscasez(producto) {
   if (!producto) return null;
 
   const stock = Number(producto.stock) || 0;
-  const descuento = Number(producto.descuento) || 0;
-  const sello = producto.selloUrgencia || 'NINGUNO';
-
-  // 1. Escasez real por stock bajo: es lo más honesto y lo más urgente, gana sobre el resto.
   if (stock > 0 && stock <= UMBRAL_STOCK_BAJO) {
     return {
       texto: stock === 1 ? '¡Última unidad!' : `¡Solo quedan ${stock}!`,
       icono: 'local_fire_department',
-      clases: 'bg-error-container/85 text-on-error-container border-error/20',
+      clases: 'bg-error-container/90 text-on-error-container border-error/30',
     };
   }
+  return null;
+}
 
-  // 2. Edición limitada (sello manual): sello premium de exclusividad.
+/*
+ * Cartel PROMOCIONAL (cinta superior). Lo controla el vendedor con el sello manual.
+ * Prioridad:
+ *   1. Edición limitada (sello manual)
+ *   2. Muy solicitado (sello manual)
+ *   3. Oferta por tiempo limitado (si hay descuento y no hay sello manual)
+ */
+export function obtenerSelloPromo(producto) {
+  if (!producto) return null;
+
+  const sello = producto.selloUrgencia || 'NINGUNO';
+  const descuento = Number(producto.descuento) || 0;
+
   if (sello === 'EDICION_LIMITADA') {
     return {
       texto: 'Edición limitada',
@@ -51,7 +61,6 @@ export function obtenerMensajeUrgencia(producto) {
     };
   }
 
-  // 3. Muy solicitado (sello manual): prueba social.
   if (sello === 'MUY_SOLICITADO') {
     return {
       texto: 'Muy solicitado',
@@ -60,7 +69,6 @@ export function obtenerMensajeUrgencia(producto) {
     };
   }
 
-  // 4. Oferta por tiempo limitado: cuando hay un descuento activo.
   if (descuento > 0) {
     return {
       texto: 'Oferta por tiempo limitado',

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 import { toggleFavorito, selectFavoritos } from '../redux/slices/favoritosSlice';
-import { obtenerMensajeUrgencia } from '../services/urgencia';
+import { obtenerBadgeEscasez, obtenerSelloPromo } from '../services/urgencia';
 
 /* Formatea un número como precio en dólares */
 const formatearPrecio = (precio) =>
@@ -26,9 +26,11 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
   const puedeAgregarAlCarrito = !!auth?.token;
   const sinStock = !producto.stock || producto.stock <= 0;
 
-  // Mensaje de urgencia/escasez (cinta superior). Cuando existe, bajamos los controles de las esquinas.
-  const mensajeUrgencia = obtenerMensajeUrgencia(producto);
-  const offsetEsquinas = mensajeUrgencia ? 'top-11' : 'top-4';
+  // Carteles de urgencia: sello promocional (cinta superior, manual) y escasez por stock real (badge rojo).
+  const selloPromo = obtenerSelloPromo(producto);
+  const badgeEscasez = obtenerBadgeEscasez(producto);
+  // Solo la cinta superior empuja los controles de las esquinas hacia abajo.
+  const offsetEsquinas = selloPromo ? 'top-11' : 'top-4';
 
   // Calcular precio con descuento primero, luego ajustar por dispositivo
   const precioConDesc = precioConDescuento(producto.precio, producto.descuento);
@@ -44,13 +46,13 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
     >
       {/* Contenedor de la Imagen */}
       <div className="relative overflow-hidden aspect-[4/5] bg-gradient-to-br from-surface-container via-surface-container-low to-surface-container border border-outline-variant/10 transition-all duration-700 ease-in-out">
-        {/* Cinta superior de urgencia / escasez */}
-        {mensajeUrgencia && (
+        {/* Cinta superior: sello promocional manual (Muy solicitado / Edición limitada / Oferta) */}
+        {selloPromo && (
           <div
-            className={`absolute top-0 inset-x-0 z-20 flex items-center justify-center gap-1.5 py-2 px-2 backdrop-blur-md border-b font-label-caps text-[10px] tracking-wider uppercase ${mensajeUrgencia.clases}`}
+            className={`absolute top-0 inset-x-0 z-20 flex items-center justify-center gap-1.5 py-2 px-2 backdrop-blur-md border-b font-label-caps text-[10px] tracking-wider uppercase ${selloPromo.clases}`}
           >
-            <span className="material-symbols-outlined text-[14px] leading-none">{mensajeUrgencia.icono}</span>
-            <span className="leading-none">{mensajeUrgencia.texto}</span>
+            <span className="material-symbols-outlined text-[14px] leading-none">{selloPromo.icono}</span>
+            <span className="leading-none">{selloPromo.texto}</span>
           </div>
         )}
 
@@ -96,6 +98,12 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
 
         {/* Badges superiores */}
         <div className={`absolute ${offsetEsquinas} left-4 flex flex-col gap-2`}>
+          {badgeEscasez && (
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 font-label-caps text-[10px] border backdrop-blur-md ${badgeEscasez.clases}`}>
+              <span className="material-symbols-outlined text-[13px] leading-none">{badgeEscasez.icono}</span>
+              {badgeEscasez.texto}
+            </span>
+          )}
           {producto.descuento > 0 && (
             <span className="px-3 py-1 font-label-caps text-[10px] border border-error/20 text-error backdrop-blur-md bg-surface-container-lowest/60">
               -{producto.descuento}%

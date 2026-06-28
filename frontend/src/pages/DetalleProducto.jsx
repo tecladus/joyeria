@@ -6,7 +6,7 @@ import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDete
 import { agregarProductoAlCarrito } from '../redux/slices/carritoSlice';
 import { toggleFavorito, selectFavoritos } from '../redux/slices/favoritosSlice';
 import { fetchProductoPorId, fetchProductos, limpiarItemSeleccionado } from '../redux/slices/productosSlice';
-import { obtenerMensajeUrgencia } from '../services/urgencia';
+import { obtenerBadgeEscasez, obtenerSelloPromo } from '../services/urgencia';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -111,7 +111,8 @@ function DetalleProducto() {
   };
 
   const sinStock = producto && (!producto.stock || producto.stock <= 0);
-  const mensajeUrgencia = producto ? obtenerMensajeUrgencia(producto) : null;
+  const selloPromo = producto ? obtenerSelloPromo(producto) : null;
+  const badgeEscasez = producto ? obtenerBadgeEscasez(producto) : null;
   const precioConDesc = producto ? precioConDescuento(producto.precio, producto.descuento) : null;
   const precioBase = precioConDesc ?? producto?.precio;
   const precioFinal = producto ? adjustPriceByDevice(precioBase) : null;
@@ -207,12 +208,20 @@ function DetalleProducto() {
               {/* Columna Derecha: Información del Producto, Tallas, Compra */}
               <div className="lg:col-span-5 space-y-8">
                 <div>
-                  {mensajeUrgencia && (
-                    <div
-                      className={`inline-flex items-center gap-2 mb-4 px-4 py-2 border font-label-caps text-[11px] tracking-wider uppercase ${mensajeUrgencia.clases}`}
-                    >
-                      <span className="material-symbols-outlined text-base leading-none">{mensajeUrgencia.icono}</span>
-                      <span className="leading-none">{mensajeUrgencia.texto}</span>
+                  {(badgeEscasez || selloPromo) && (
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      {badgeEscasez && (
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 border font-label-caps text-[11px] tracking-wider uppercase ${badgeEscasez.clases}`}>
+                          <span className="material-symbols-outlined text-base leading-none">{badgeEscasez.icono}</span>
+                          <span className="leading-none">{badgeEscasez.texto}</span>
+                        </div>
+                      )}
+                      {selloPromo && (
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 border font-label-caps text-[11px] tracking-wider uppercase ${selloPromo.clases}`}>
+                          <span className="material-symbols-outlined text-base leading-none">{selloPromo.icono}</span>
+                          <span className="leading-none">{selloPromo.texto}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                   {producto.categoria && (
