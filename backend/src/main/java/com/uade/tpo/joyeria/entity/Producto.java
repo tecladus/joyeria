@@ -39,6 +39,12 @@ public class Producto {
     @Column(name = "imagen_url", length = 255)
     private String imagenUrl;
 
+    // Sello de urgencia asignado manualmente por el vendedor/admin (puede ser null en filas antiguas).
+    // Se persiste como texto (EnumType.STRING) para legibilidad en la base de datos.
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sello_urgencia", length = 30)
+    private SelloUrgencia selloUrgencia = SelloUrgencia.NINGUNO;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { adjustPriceByDevice, useDeviceMultiplier } from '../services/deviceDetection';
 import { toggleFavorito, selectFavoritos } from '../redux/slices/favoritosSlice';
+import { obtenerMensajeUrgencia } from '../services/urgencia';
 
 /* Formatea un número como precio en dólares */
 const formatearPrecio = (precio) =>
@@ -25,6 +26,10 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
   const puedeAgregarAlCarrito = !!auth?.token;
   const sinStock = !producto.stock || producto.stock <= 0;
 
+  // Mensaje de urgencia/escasez (cinta superior). Cuando existe, bajamos los controles de las esquinas.
+  const mensajeUrgencia = obtenerMensajeUrgencia(producto);
+  const offsetEsquinas = mensajeUrgencia ? 'top-11' : 'top-4';
+
   // Calcular precio con descuento primero, luego ajustar por dispositivo
   const precioConDesc = precioConDescuento(producto.precio, producto.descuento);
   const precioBase = precioConDesc ?? producto.precio;
@@ -39,6 +44,16 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
     >
       {/* Contenedor de la Imagen */}
       <div className="relative overflow-hidden aspect-[4/5] bg-gradient-to-br from-surface-container via-surface-container-low to-surface-container border border-outline-variant/10 transition-all duration-700 ease-in-out">
+        {/* Cinta superior de urgencia / escasez */}
+        {mensajeUrgencia && (
+          <div
+            className={`absolute top-0 inset-x-0 z-20 flex items-center justify-center gap-1.5 py-2 px-2 backdrop-blur-md border-b font-label-caps text-[10px] tracking-wider uppercase ${mensajeUrgencia.clases}`}
+          >
+            <span className="material-symbols-outlined text-[14px] leading-none">{mensajeUrgencia.icono}</span>
+            <span className="leading-none">{mensajeUrgencia.texto}</span>
+          </div>
+        )}
+
         {producto.imagenUrl && !errorImagen ? (
           <img
             src={producto.imagenUrl}
@@ -68,7 +83,7 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
             }
             dispatch(toggleFavorito(producto));
           }}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/10 flex items-center justify-center cursor-pointer text-on-surface hover:scale-105 transition-all duration-300 shadow-sm"
+          className={`absolute ${offsetEsquinas} right-4 z-10 w-8 h-8 rounded-full bg-surface-container-lowest/70 backdrop-blur-md border border-outline-variant/10 flex items-center justify-center cursor-pointer text-on-surface hover:scale-105 transition-all duration-300 shadow-sm`}
           title={esFavorito ? 'Quitar de Favoritos' : 'Añadir a Favoritos'}
         >
           <span 
@@ -80,7 +95,7 @@ function TarjetaProducto({ producto, onAgregarCarrito }) {
         </button>
 
         {/* Badges superiores */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2">
+        <div className={`absolute ${offsetEsquinas} left-4 flex flex-col gap-2`}>
           {producto.descuento > 0 && (
             <span className="px-3 py-1 font-label-caps text-[10px] border border-error/20 text-error backdrop-blur-md bg-surface-container-lowest/60">
               -{producto.descuento}%

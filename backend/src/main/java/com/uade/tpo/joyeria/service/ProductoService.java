@@ -4,6 +4,7 @@ import com.uade.tpo.joyeria.dto.ProductoRequest;
 import com.uade.tpo.joyeria.dto.ProductoResponse;
 import com.uade.tpo.joyeria.entity.Categoria;
 import com.uade.tpo.joyeria.entity.Producto;
+import com.uade.tpo.joyeria.entity.SelloUrgencia;
 import com.uade.tpo.joyeria.entity.Usuario;
 import com.uade.tpo.joyeria.exception.AccesoDenegadoException;
 import com.uade.tpo.joyeria.exception.RecursoNoEncontradoException;
@@ -83,6 +84,7 @@ public class ProductoService {
         producto.setDescuento(request.getDescuento());
         producto.setStock(request.getStock());
         producto.setImagenUrl(request.getImagenUrl());
+        producto.setSelloUrgencia(request.getSelloUrgencia() != null ? request.getSelloUrgencia() : SelloUrgencia.NINGUNO);
         producto.setCategoria(categoria);
         producto.setVendedor(vendedor);
 
@@ -105,6 +107,7 @@ public class ProductoService {
         producto.setDescuento(request.getDescuento());
         producto.setStock(request.getStock());
         producto.setImagenUrl(request.getImagenUrl());
+        producto.setSelloUrgencia(request.getSelloUrgencia() != null ? request.getSelloUrgencia() : SelloUrgencia.NINGUNO);
         producto.setCategoria(categoria);
 
         return mapearAResponse(productoRepository.save(producto));
@@ -148,6 +151,7 @@ public class ProductoService {
                 .descuento(producto.getDescuento())
                 .stock(producto.getStock())
                 .imagenUrl(producto.getImagenUrl())
+                .selloUrgencia(producto.getSelloUrgencia() != null ? producto.getSelloUrgencia() : SelloUrgencia.NINGUNO)
                 .idCategoria(producto.getCategoria().getIdCategoria())
                 .categoria(producto.getCategoria().getNombre())
                 .vendedor(producto.getVendedor().getNombre())

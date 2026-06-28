@@ -5,6 +5,7 @@ import { fetchUsuarios, cambiarRolUsuarioExistente, eliminarUsuarioExistente } f
 import { fetchTodasLasOrdenes, actualizarEstadoOrdenExistente } from '../redux/slices/ordenesSlice';
 import { fetchProductos, editarProductoExistente, eliminarProductoExistente } from '../redux/slices/productosSlice';
 import { fetchCategorias, crearNuevaCategoria, editarCategoriaExistente, eliminarCategoriaExistente } from '../redux/slices/categoriasSlice';
+import { SELLOS_URGENCIA } from '../services/urgencia';
 
 const TABS = [
   { id: 'metrics', label: 'Métricas' },
@@ -47,6 +48,7 @@ function PanelAdmin() {
   const [editPrecio, setEditPrecio] = useState('');
   const [editStock, setEditStock] = useState('');
   const [editImagenUrl, setEditImagenUrl] = useState('');
+  const [editSelloUrgencia, setEditSelloUrgencia] = useState('NINGUNO');
   const [editIdCategoria, setEditIdCategoria] = useState('');
 
   // Editar Categoría en línea
@@ -116,6 +118,7 @@ function PanelAdmin() {
     setEditPrecio(prod.precio || '');
     setEditStock(prod.stock || '');
     setEditImagenUrl(prod.imagenUrl || '');
+    setEditSelloUrgencia(prod.selloUrgencia || 'NINGUNO');
     setEditIdCategoria(prod.idCategoria || '');
   };
 
@@ -130,6 +133,7 @@ function PanelAdmin() {
         descuento: prodAEditar.descuento,
         stock: parseInt(editStock, 10),
         imagenUrl: editImagenUrl || null,
+        selloUrgencia: editSelloUrgencia || 'NINGUNO',
         categoriaId: Number(editIdCategoria)
       };
       await dispatch(editarProductoExistente({ id: prodAEditar.idProducto, vendedorId: auth.idUsuario, datos: datosActualizados })).unwrap();
@@ -500,12 +504,29 @@ function PanelAdmin() {
                         </div>
                         <div>
                           <label className="block text-xs uppercase font-label-caps text-outline mb-1">URL de la Imagen</label>
-                          <input 
-                            type="url" 
-                            value={editImagenUrl} 
+                          <input
+                            type="url"
+                            value={editImagenUrl}
                             onChange={(e) => setEditImagenUrl(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
                           />
+                        </div>
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Sello de Urgencia</label>
+                          <select
+                            value={editSelloUrgencia}
+                            onChange={(e) => setEditSelloUrgencia(e.target.value)}
+                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
+                          >
+                            {SELLOS_URGENCIA.map((opcion) => (
+                              <option key={opcion.value} value={opcion.value} className="bg-background text-on-surface">
+                                {opcion.label}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="block text-[10px] text-outline/70 mt-1 normal-case">
+                            “Pocas unidades” (stock bajo) y “oferta por tiempo limitado” (descuento) aparecen automáticamente.
+                          </span>
                         </div>
                         <div className="pt-4 flex gap-4">
                           <button type="button" onClick={() => setProdAEditar(null)} className="flex-1 py-2.5 border border-outline text-secondary font-label-caps text-xs uppercase hover:bg-surface-container-low transition-colors bg-transparent">

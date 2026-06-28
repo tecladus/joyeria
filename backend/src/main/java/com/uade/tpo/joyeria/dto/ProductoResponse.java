@@ -1,5 +1,6 @@
 package com.uade.tpo.joyeria.dto;
 
+import com.uade.tpo.joyeria.entity.SelloUrgencia;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,6 +18,7 @@ public class ProductoResponse {
     private BigDecimal descuento;
     private Integer stock;
     private String imagenUrl;
+    private SelloUrgencia selloUrgencia;
     private Long idCategoria;
     private String categoria;
     private String vendedor;

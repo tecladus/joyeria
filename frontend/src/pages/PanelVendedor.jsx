@@ -9,6 +9,7 @@ import {
   aplicarDescuentoProducto
 } from '../redux/slices/productosSlice';
 import { fetchCategorias } from '../redux/slices/categoriasSlice';
+import { SELLOS_URGENCIA } from '../services/urgencia';
 
 const formatearPrecio = (precio) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(precio);
@@ -20,6 +21,7 @@ const FORM_VACIO = {
   descuento: 0,
   stock: '',
   imagenUrl: '',
+  selloUrgencia: 'NINGUNO',
   categoriaId: '',
 };
 
@@ -85,6 +87,7 @@ function PanelVendedor() {
       descuento: parseFloat(form.descuento) || 0,
       stock: parseInt(form.stock),
       imagenUrl: form.imagenUrl || null,
+      selloUrgencia: form.selloUrgencia || 'NINGUNO',
       categoriaId: parseInt(form.categoriaId),
     };
     try {
@@ -112,6 +115,7 @@ function PanelVendedor() {
       descuento: producto.descuento?.toString() || '0',
       stock: producto.stock?.toString() || '',
       imagenUrl: producto.imagenUrl || '',
+      selloUrgencia: producto.selloUrgencia || 'NINGUNO',
       categoriaId: '', // No viene el id directo de categoría, se debe seleccionar nuevamente
     });
     setModoEdicion(producto.idProducto);
@@ -298,6 +302,29 @@ function PanelVendedor() {
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+
+              {/* Sello de urgencia */}
+              <div className="flex flex-col">
+                <label className="font-label-caps text-[10px] text-outline uppercase tracking-wider mb-1" htmlFor="selloUrgencia">
+                  Sello de urgencia
+                </label>
+                <select
+                  id="selloUrgencia"
+                  name="selloUrgencia"
+                  className="w-full bg-transparent border-0 border-b border-outline/30 py-2 px-0 focus:ring-0 focus:border-primary font-body-md text-on-surface cursor-pointer"
+                  value={form.selloUrgencia}
+                  onChange={handleChange}
+                >
+                  {SELLOS_URGENCIA.map((opcion) => (
+                    <option key={opcion.value} value={opcion.value} className="bg-background text-on-surface">
+                      {opcion.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-outline/70 mt-1 font-body-md">
+                  Los avisos de “pocas unidades” (stock bajo) y “oferta por tiempo limitado” (descuento) se muestran solos.
+                </span>
               </div>
 
               {/* Botones del Formulario */}

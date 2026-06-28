@@ -1,5 +1,6 @@
 package com.uade.tpo.joyeria.dto;
 
+import com.uade.tpo.joyeria.entity.SelloUrgencia;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -27,6 +28,9 @@ public class ProductoRequest {
     private Integer stock;
 
     private String imagenUrl;
+
+    // Sello de urgencia opcional. Si viene null se interpreta como NINGUNO en el service.
+    private SelloUrgencia selloUrgencia;
 
     @NotNull(message = "La categoria es obligatoria")
     private Long categoriaId;
