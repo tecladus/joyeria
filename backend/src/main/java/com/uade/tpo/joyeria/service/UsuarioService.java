@@ -134,6 +134,7 @@ public class UsuarioService implements UserDetailsService {
                 .rol(usuario.getRol().getNombre())
                 .direccion(usuario.getDireccion())
                 .telefono(usuario.getTelefono())
+                .puntos(usuario.getPuntos())
                 .build();
     }
 
@@ -149,6 +150,7 @@ public class UsuarioService implements UserDetailsService {
                 .telefono(usuario.getTelefono())
                 .fechaCreacion(usuario.getFechaCreacion())
                 .rol(usuario.getRol().getNombre())
+                .puntos(usuario.getPuntos())
                 .build();
     }
 

@@ -28,6 +28,8 @@ public class OrdenService {
     private final MailService mailService;
     private final PagoRepository pagoRepository;
     private final MercadoPagoService mercadoPagoService;
+    private final CuponService cuponService;
+    private final PuntosService puntosService;
 
     public OrdenService(OrdenRepository ordenRepository,
                         ProductoRepository productoRepository,
@@ -35,7 +37,9 @@ public class OrdenService {
                         CarritoService carritoService,
                         MailService mailService,
                         PagoRepository pagoRepository,
-                        MercadoPagoService mercadoPagoService) {
+                        MercadoPagoService mercadoPagoService,
+                        CuponService cuponService,
+                        PuntosService puntosService) {
         this.ordenRepository = ordenRepository;
         this.productoRepository = productoRepository;
         this.usuarioService = usuarioService;
@@ -43,6 +47,8 @@ public class OrdenService {
         this.mailService = mailService;
         this.pagoRepository = pagoRepository;
         this.mercadoPagoService = mercadoPagoService;
+        this.cuponService = cuponService;
+        this.puntosService = puntosService;
     }
 
     // @Transactional es critico: agrupa todas las operaciones en una sola transaccion.
@@ -103,16 +109,25 @@ public class OrdenService {
 
         orden.setDetalles(detalles);
 
-        BigDecimal total = detalles.stream()
+        BigDecimal subtotal = detalles.stream()
                 .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        orden.setTotal(total);
+        // Total provisional = subtotal. Lo guardamos primero para que la orden tenga ID
+        // (los movimientos de puntos referencian la orden ya persistida).
+        orden.setSubtotal(subtotal);
+        orden.setTotal(subtotal);
+        Orden guardada = ordenRepository.save(orden);
+
+        // Aplica cupon de embajador y canje de puntos; ajusta el total final.
+        aplicarPromociones(usuario, guardada, subtotal, checkoutRequest);
+        guardada = ordenRepository.save(guardada);
+
+        // En el flujo directo (tarjeta/transferencia/efectivo) los puntos se acreditan al instante.
+        otorgarPuntosGanados(usuario, guardada);
 
         // Cerramos el carrito. La proxima compra arranca con uno nuevo.
         carrito.setActivo(false);
-
-        Orden guardada = ordenRepository.save(orden);
 
         // Intentamos enviar el mail de confirmación
         try {
@@ -163,6 +178,10 @@ public class OrdenService {
                 prod.setStock(prod.getStock() + detalle.getCantidad());
                 productoRepository.save(prod);
             }
+            // Revertir promociones: liberar el uso del cupon, devolver los puntos canjeados
+            // y quitar los puntos que la compra habia otorgado.
+            // (Nota: una posterior reactivacion de la orden no vuelve a aplicar estas promociones.)
+            revertirPromociones(orden);
         } else if ("CANCELADO".equals(oldEstado) && !"CANCELADO".equals(nuevoEstado)) {
             for (DetalleOrden detalle : orden.getDetalles()) {
                 Producto prod = detalle.getProducto();
@@ -232,14 +251,20 @@ public class OrdenService {
 
         orden.setDetalles(detalles);
 
-        BigDecimal total = detalles.stream()
+        BigDecimal subtotal = detalles.stream()
                 .map(d -> d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        orden.setTotal(total);
-        carrito.setActivo(false);
-
+        orden.setSubtotal(subtotal);
+        orden.setTotal(subtotal);
         Orden guardada = ordenRepository.save(orden);
+
+        // Aplica cupon y canje de puntos para que Mercado Pago cobre el monto ya descontado.
+        // Los puntos GANADOS se acreditan recien al confirmarse el pago (confirmarPagoOrden).
+        aplicarPromociones(usuario, guardada, subtotal, checkoutRequest);
+        guardada = ordenRepository.save(guardada);
+
+        carrito.setActivo(false);
 
         String descripcion = "Compra en Aura Joyería - Orden #" + guardada.getIdOrden();
         return mercadoPagoService.crearPreferenciaPago(guardada.getIdOrden(), descripcion, guardada.getTotal());
@@ -262,6 +287,9 @@ public class OrdenService {
                 pago.setOrden(guardada);
                 pagoRepository.save(pago);
 
+                // Recien ahora que el pago fue aprobado acreditamos los puntos de la compra.
+                otorgarPuntosGanados(guardada.getUsuario(), guardada);
+
                 try {
                     mailService.enviarConfirmacionCompra(orden.getUsuario().getEmail(), guardada);
                 } catch (Exception e) {
@@ -273,6 +301,70 @@ public class OrdenService {
             }
         }
         return mapearAResponse(orden);
+    }
+
+    // Aplica el cupon de embajador y el canje de puntos sobre una orden ya persistida.
+    // Setea el desglose (subtotal, descuentos) y el total final. NO acredita puntos ganados.
+    private void aplicarPromociones(Usuario usuario, Orden orden, BigDecimal subtotal, CheckoutRequest req) {
+        BigDecimal descuentoCupon = BigDecimal.ZERO;
+        BigDecimal descuentoPuntos = BigDecimal.ZERO;
+
+        // 1) Cupon de embajador → descuento porcentual sobre el subtotal.
+        if (req.getCodigoCupon() != null && !req.getCodigoCupon().isBlank()) {
+            var cupon = cuponService.validarParaUso(req.getCodigoCupon());
+            descuentoCupon = subtotal
+                    .multiply(BigDecimal.valueOf(cupon.getPorcentajeDescuento()))
+                    .divide(BigDecimal.valueOf(100))
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+            cuponService.registrarUso(cupon);
+            orden.setCuponCodigo(cupon.getCodigo());
+            orden.setDescuentoCupon(descuentoCupon);
+        }
+
+        BigDecimal baseLuegoCupon = subtotal.subtract(descuentoCupon);
+
+        // 2) Canje de puntos → descuento en dinero (no puede superar lo que queda a pagar).
+        Integer puntos = req.getPuntosACanjear();
+        if (puntos != null && puntos > 0) {
+            descuentoPuntos = puntosService.calcularDescuentoPorPuntos(puntos);
+            if (descuentoPuntos.compareTo(baseLuegoCupon) > 0) {
+                throw new IllegalArgumentException(
+                        "El descuento por puntos supera el monto a pagar. Canjeá menos puntos.");
+            }
+            puntosService.canjearPuntos(usuario, orden, puntos, "Canje de puntos en orden #" + orden.getIdOrden());
+            orden.setPuntosCanjeados(puntos);
+            orden.setDescuentoPuntos(descuentoPuntos);
+        }
+
+        BigDecimal total = subtotal.subtract(descuentoCupon).subtract(descuentoPuntos);
+        if (total.signum() < 0) total = BigDecimal.ZERO;
+        orden.setTotal(total);
+    }
+
+    // Acredita al comprador los puntos que genero la compra (1 punto por cada $1 del total pagado).
+    private void otorgarPuntosGanados(Usuario usuario, Orden orden) {
+        int ganados = puntosService.calcularPuntosGanados(orden.getTotal());
+        if (ganados <= 0) return;
+        orden.setPuntosGanados(ganados);
+        ordenRepository.save(orden);
+        puntosService.otorgarPuntos(usuario, orden, ganados, "Puntos por compra (orden #" + orden.getIdOrden() + ")");
+    }
+
+    // Deshace las promociones de una orden cancelada.
+    private void revertirPromociones(Orden orden) {
+        Usuario usuario = orden.getUsuario();
+
+        if (orden.getCuponCodigo() != null) {
+            cuponService.revertirUso(orden.getCuponCodigo());
+        }
+        if (orden.getPuntosCanjeados() != null && orden.getPuntosCanjeados() > 0) {
+            puntosService.reintegrarPuntos(usuario, orden.getPuntosCanjeados(),
+                    "Reintegro de puntos por cancelación de orden #" + orden.getIdOrden());
+        }
+        if (orden.getPuntosGanados() != null && orden.getPuntosGanados() > 0) {
+            puntosService.quitarPuntosGanados(usuario, orden.getPuntosGanados(),
+                    "Reversa de puntos por cancelación de orden #" + orden.getIdOrden());
+        }
     }
 
     private OrdenResponse mapearAResponse(Orden orden) {
@@ -292,6 +384,12 @@ public class OrdenService {
                 .fecha(orden.getFecha())
                 .estado(orden.getEstado())
                 .total(orden.getTotal())
+                .subtotal(orden.getSubtotal())
+                .cuponCodigo(orden.getCuponCodigo())
+                .descuentoCupon(orden.getDescuentoCupon())
+                .puntosCanjeados(orden.getPuntosCanjeados())
+                .descuentoPuntos(orden.getDescuentoPuntos())
+                .puntosGanados(orden.getPuntosGanados())
                 .usuario(orden.getUsuario().getNombre())
                 .metodoPago(orden.getMetodoPago())
                 .nombreCompleto(orden.getNombreCompleto())

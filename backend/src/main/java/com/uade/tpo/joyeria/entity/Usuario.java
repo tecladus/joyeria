@@ -50,6 +50,11 @@ public class Usuario implements UserDetails {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
+    // Saldo de puntos de fidelidad (estilo McDonald's). Se gana 1 punto por cada $1 gastado
+    // y se canjea de a 100 puntos por $5 de descuento. El detalle vive en movimientos_puntos.
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private Integer puntos = 0;
+
     // EAGER: necesario porque getAuthorities() requiere el rol en cada request autenticado.
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)

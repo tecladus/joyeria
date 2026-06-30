@@ -249,3 +249,38 @@ export const convertirseEnVendedor = async () => {
 export const enviarContacto = async (datosContacto) => {
   return api.post('/contacto', datosContacto, { conAuth: false });
 };
+
+// ========================
+//        CUPONES
+// ========================
+
+// Previsualiza un cupón de embajador desde el carrito (usuario autenticado).
+export const validarCupon = async (codigo) => {
+  return api.get(`/cupones/validar?codigo=${encodeURIComponent(codigo)}`);
+};
+
+// Gestión (Admin)
+export const getCupones = async () => {
+  return api.get('/cupones');
+};
+
+export const crearCupon = async (datos) => {
+  return api.post('/cupones', datos);
+};
+
+export const editarCupon = async (id, datos) => {
+  return api.put(`/cupones/${id}`, datos);
+};
+
+export const eliminarCupon = async (id) => {
+  return api.delete(`/cupones/${id}`);
+};
+
+// ========================
+//         PUNTOS
+// ========================
+
+// Saldo e historial de puntos del usuario autenticado.
+export const getPuntos = async () => {
+  return api.get('/puntos');
+};

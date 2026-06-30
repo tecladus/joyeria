@@ -64,6 +64,7 @@ const initialState = {
   email: '',
   direccion: '',
   telefono: '',
+  puntos: 0,
   cargandoPerfil: false,
   errorPerfil: null,
 };
@@ -78,6 +79,9 @@ const aplicarSesion = (state, datos) => {
   state.email = datos.email || '';
   state.direccion = datos.direccion || '';
   state.telefono = datos.telefono || '';
+  if (datos.puntos !== undefined && datos.puntos !== null) {
+    state.puntos = datos.puntos;
+  }
 };
 
 const authSlice = createSlice({
@@ -96,6 +100,7 @@ const authSlice = createSlice({
       state.email = '';
       state.direccion = '';
       state.telefono = '';
+      state.puntos = 0;
     },
   },
   extraReducers: (builder) => {
@@ -121,6 +126,7 @@ const authSlice = createSlice({
         state.email = perfil.email || '';
         state.direccion = perfil.direccion || '';
         state.telefono = perfil.telefono || '';
+        state.puntos = perfil.puntos ?? 0;
       })
       .addCase(fetchPerfil.rejected, (state, action) => {
         state.cargandoPerfil = false;

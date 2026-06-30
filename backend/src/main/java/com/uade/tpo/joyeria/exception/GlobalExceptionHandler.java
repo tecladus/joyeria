@@ -29,8 +29,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
     }
 
-    // 409 Conflict: email o nombre de categoria duplicado
-    @ExceptionHandler({EmailDuplicadoException.class, CategoriaDuplicadaException.class})
+    // 409 Conflict: email, nombre de categoria o codigo de cupon duplicado
+    @ExceptionHandler({EmailDuplicadoException.class, CategoriaDuplicadaException.class, CuponDuplicadoException.class})
     public ResponseEntity<Map<String, String>> handleConflicto(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
     }

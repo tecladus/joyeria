@@ -19,4 +19,5 @@ public class UsuarioResponse {
     private String telefono;
     private LocalDateTime fechaCreacion;
     private String rol;
+    private Integer puntos;
 }

@@ -5,6 +5,7 @@ import { fetchUsuarios, cambiarRolUsuarioExistente, eliminarUsuarioExistente } f
 import { fetchTodasLasOrdenes, actualizarEstadoOrdenExistente } from '../redux/slices/ordenesSlice';
 import { fetchProductos, editarProductoExistente, eliminarProductoExistente } from '../redux/slices/productosSlice';
 import { fetchCategorias, crearNuevaCategoria, editarCategoriaExistente, eliminarCategoriaExistente } from '../redux/slices/categoriasSlice';
+import { fetchCupones, crearNuevoCupon, editarCuponExistente, eliminarCuponExistente } from '../redux/slices/cuponesSlice';
 import { SELLOS_URGENCIA } from '../services/urgencia';
 
 const TABS = [
@@ -12,7 +13,8 @@ const TABS = [
   { id: 'users', label: 'Usuarios' },
   { id: 'catalog', label: 'Catálogo' },
   { id: 'orders', label: 'Órdenes' },
-  { id: 'categories', label: 'Categorías' }
+  { id: 'categories', label: 'Categorías' },
+  { id: 'coupons', label: 'Cupones' }
 ];
 
 const ROLES = [
@@ -35,8 +37,9 @@ function PanelAdmin() {
   const { todasLasOrdenes: ordenes, cargando: cargandoOrdenes } = useSelector((state) => state.ordenes);
   const { items: productos, cargando: cargandoProductos } = useSelector((state) => state.productos);
   const { items: categorias, cargando: cargandoCategorias } = useSelector((state) => state.categorias);
+  const { items: cupones, cargando: cargandoCupones } = useSelector((state) => state.cupones);
 
-  const cargando = cargandoUsuarios || cargandoOrdenes || cargandoProductos || cargandoCategorias;
+  const cargando = cargandoUsuarios || cargandoOrdenes || cargandoProductos || cargandoCategorias || cargandoCupones;
 
   // Formulario Categoría
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
@@ -55,6 +58,10 @@ function PanelAdmin() {
   const [catAEditar, setCatAEditar] = useState(null);
   const [editCatNombre, setEditCatNombre] = useState('');
 
+  // Cupones de embajador
+  const [nuevoCupon, setNuevoCupon] = useState({ codigo: '', embajador: '', porcentajeDescuento: '', usosMaximos: '' });
+  const [cuponAEditar, setCuponAEditar] = useState(null);
+
   const mostrarToast = (mensaje) => {
     setToast(mensaje);
     setTimeout(() => setToast(''), 2500);
@@ -67,7 +74,8 @@ function PanelAdmin() {
         dispatch(fetchUsuarios()).unwrap(),
         dispatch(fetchTodasLasOrdenes()).unwrap(),
         dispatch(fetchProductos()).unwrap(),
-        dispatch(fetchCategorias()).unwrap()
+        dispatch(fetchCategorias()).unwrap(),
+        dispatch(fetchCupones()).unwrap()
       ]);
     } catch (err) {
       setError(err || 'Error al cargar los datos administrativos.');
@@ -186,6 +194,87 @@ function PanelAdmin() {
       setCatAEditar(null);
     } catch (err) {
       setError(err.message || 'Error al actualizar la categoría.');
+    }
+  };
+
+  // Handlers Cupones
+  const handleCrearCupon = async (e) => {
+    e.preventDefault();
+    const codigo = nuevoCupon.codigo.trim();
+    const embajador = nuevoCupon.embajador.trim();
+    const pct = Number(nuevoCupon.porcentajeDescuento);
+    if (!codigo || !embajador) return;
+    if (!(pct >= 1 && pct <= 100)) {
+      setError('El descuento debe estar entre 1 y 100%.');
+      return;
+    }
+    try {
+      await dispatch(crearNuevoCupon({
+        codigo,
+        embajador,
+        porcentajeDescuento: pct,
+        usosMaximos: nuevoCupon.usosMaximos === '' ? null : Number(nuevoCupon.usosMaximos),
+        activo: true,
+      })).unwrap();
+      mostrarToast('Cupón de embajador creado');
+      setNuevoCupon({ codigo: '', embajador: '', porcentajeDescuento: '', usosMaximos: '' });
+    } catch (err) {
+      setError(err.message || err || 'Error al crear el cupón.');
+    }
+  };
+
+  const handleToggleCupon = async (c) => {
+    try {
+      await dispatch(editarCuponExistente({
+        id: c.idCupon,
+        datos: {
+          codigo: c.codigo,
+          embajador: c.embajador,
+          porcentajeDescuento: c.porcentajeDescuento,
+          usosMaximos: c.usosMaximos,
+          activo: !c.activo,
+        },
+      })).unwrap();
+      mostrarToast(c.activo ? 'Cupón desactivado' : 'Cupón activado');
+    } catch (err) {
+      setError(err.message || err || 'Error al actualizar el cupón.');
+    }
+  };
+
+  const handleEliminarCupon = async (id) => {
+    const confirmado = await showConfirm('¿Eliminar este cupón de embajador de forma permanente?', 'Eliminar Cupón');
+    if (!confirmado) return;
+    try {
+      await dispatch(eliminarCuponExistente(id)).unwrap();
+      mostrarToast('Cupón eliminado');
+    } catch (err) {
+      setError(err.message || err || 'Error al eliminar el cupón.');
+    }
+  };
+
+  const handleGuardarCupon = async (e) => {
+    e.preventDefault();
+    if (!cuponAEditar) return;
+    const pct = Number(cuponAEditar.porcentajeDescuento);
+    if (!(pct >= 1 && pct <= 100)) {
+      setError('El descuento debe estar entre 1 y 100%.');
+      return;
+    }
+    try {
+      await dispatch(editarCuponExistente({
+        id: cuponAEditar.idCupon,
+        datos: {
+          codigo: cuponAEditar.codigo.trim(),
+          embajador: cuponAEditar.embajador.trim(),
+          porcentajeDescuento: pct,
+          usosMaximos: (cuponAEditar.usosMaximos === '' || cuponAEditar.usosMaximos === null) ? null : Number(cuponAEditar.usosMaximos),
+          activo: cuponAEditar.activo,
+        },
+      })).unwrap();
+      mostrarToast('Cupón actualizado');
+      setCuponAEditar(null);
+    } catch (err) {
+      setError(err.message || err || 'Error al actualizar el cupón.');
     }
   };
 
@@ -714,6 +803,167 @@ function PanelAdmin() {
                     </tbody>
                   </table>
                 </div>
+
+              </div>
+            )}
+
+            {/* TABS: Cupones de embajador */}
+            {tabActiva === 'coupons' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in">
+
+                {/* Formulario crear cupón */}
+                <div className="md:col-span-1 bg-surface-container-lowest border border-outline-variant/20 p-6 rounded shadow-sm space-y-4 h-fit">
+                  <h3 className="font-label-caps text-xs tracking-wider uppercase text-on-surface font-semibold">Nuevo Cupón de Embajador</h3>
+                  <p className="text-[11px] text-outline font-body-md leading-relaxed">
+                    El comprador escribe el código en el carrito (estilo código de creador) y recibe el % de descuento.
+                  </p>
+                  <form onSubmit={handleCrearCupon} className="space-y-4 text-sm font-body-md">
+                    <div>
+                      <label className="block text-xs uppercase font-label-caps text-outline mb-1">Código</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: MESSI10"
+                        value={nuevoCupon.codigo}
+                        onChange={(e) => setNuevoCupon({ ...nuevoCupon, codigo: e.target.value.toUpperCase() })}
+                        className="w-full bg-transparent border border-outline/35 rounded p-3 text-on-surface focus:ring-primary focus:border-primary uppercase"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase font-label-caps text-outline mb-1">Embajador</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Lionel Messi"
+                        value={nuevoCupon.embajador}
+                        onChange={(e) => setNuevoCupon({ ...nuevoCupon, embajador: e.target.value })}
+                        className="w-full bg-transparent border border-outline/35 rounded p-3 text-on-surface focus:ring-primary focus:border-primary"
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descuento (%)</label>
+                        <input
+                          type="number" min="1" max="100"
+                          placeholder="10"
+                          value={nuevoCupon.porcentajeDescuento}
+                          onChange={(e) => setNuevoCupon({ ...nuevoCupon, porcentajeDescuento: e.target.value })}
+                          className="w-full bg-transparent border border-outline/35 rounded p-3 text-on-surface focus:ring-primary focus:border-primary"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs uppercase font-label-caps text-outline mb-1">Tope usos</label>
+                        <input
+                          type="number" min="1"
+                          placeholder="∞"
+                          value={nuevoCupon.usosMaximos}
+                          onChange={(e) => setNuevoCupon({ ...nuevoCupon, usosMaximos: e.target.value })}
+                          className="w-full bg-transparent border border-outline/35 rounded p-3 text-on-surface focus:ring-primary focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                    <button type="submit" className="w-full py-3 bg-on-surface text-background hover:bg-primary hover:text-white transition-all uppercase tracking-widest font-label-caps text-[10px] border-0 cursor-pointer">
+                      Crear Cupón
+                    </button>
+                  </form>
+                </div>
+
+                {/* Listado de cupones */}
+                <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant/20 rounded shadow-sm overflow-x-auto">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-outline-variant/10 bg-surface-container-low text-[10px] font-label-caps uppercase text-outline font-semibold">
+                        <th className="p-4">Código</th>
+                        <th className="p-4">Embajador</th>
+                        <th className="p-4 text-center">Desc.</th>
+                        <th className="p-4 text-center">Usos</th>
+                        <th className="p-4 text-center">Estado</th>
+                        <th className="p-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-outline-variant/10 font-body-md">
+                      {cupones.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-outline text-sm">
+                            Aún no hay cupones. Creá el primero con el formulario.
+                          </td>
+                        </tr>
+                      ) : cupones.map((c) => (
+                        <tr key={c.idCupon} className="hover:bg-surface-container-low/30 transition-colors">
+                          <td className="p-4 font-semibold text-primary font-label-caps tracking-wider">{c.codigo}</td>
+                          <td className="p-4 text-secondary">{c.embajador}</td>
+                          <td className="p-4 text-center font-semibold">{c.porcentajeDescuento}%</td>
+                          <td className="p-4 text-center text-xs text-secondary tabular-nums">
+                            {c.usos}{c.usosMaximos ? ` / ${c.usosMaximos}` : ''}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-label-caps tracking-wider uppercase font-semibold ${c.activo ? 'bg-success-container/10 text-success border border-success/30' : 'bg-outline-variant/20 text-outline border border-outline-variant/30'}`}>
+                              {c.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right space-x-3 whitespace-nowrap">
+                            <button onClick={() => handleToggleCupon(c)} className="text-secondary hover:text-primary hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer">
+                              {c.activo ? 'Desactivar' : 'Activar'}
+                            </button>
+                            <button onClick={() => setCuponAEditar({ ...c, usosMaximos: c.usosMaximos ?? '' })} className="text-primary hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer">
+                              Editar
+                            </button>
+                            <button onClick={() => handleEliminarCupon(c.idCupon)} className="text-error hover:underline text-xs uppercase tracking-wider font-semibold bg-transparent border-0 cursor-pointer">
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Modal edición de cupón */}
+                {cuponAEditar && (
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+                    <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6">
+                      <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
+                        <h4 className="font-display-lg text-lg text-on-surface">Editar Cupón</h4>
+                        <button onClick={() => setCuponAEditar(null)} className="bg-transparent border-0 text-outline hover:text-on-surface cursor-pointer">
+                          <span className="material-symbols-outlined">close</span>
+                        </button>
+                      </div>
+                      <form onSubmit={handleGuardarCupon} className="space-y-4 font-body-md text-sm">
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Código</label>
+                          <input type="text" value={cuponAEditar.codigo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, codigo: e.target.value.toUpperCase() })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary uppercase" required />
+                        </div>
+                        <div>
+                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Embajador</label>
+                          <input type="text" value={cuponAEditar.embajador} onChange={(e) => setCuponAEditar({ ...cuponAEditar, embajador: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descuento (%)</label>
+                            <input type="number" min="1" max="100" value={cuponAEditar.porcentajeDescuento} onChange={(e) => setCuponAEditar({ ...cuponAEditar, porcentajeDescuento: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
+                          </div>
+                          <div>
+                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Tope usos</label>
+                            <input type="number" min="1" placeholder="∞" value={cuponAEditar.usosMaximos} onChange={(e) => setCuponAEditar({ ...cuponAEditar, usosMaximos: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" />
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
+                          <input type="checkbox" checked={cuponAEditar.activo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, activo: e.target.checked })} className="text-primary focus:ring-primary border-outline-variant rounded cursor-pointer" />
+                          Cupón activo
+                        </label>
+                        <div className="flex gap-3 pt-2">
+                          <button type="button" onClick={() => setCuponAEditar(null)} className="flex-1 py-2.5 border border-outline/30 text-secondary hover:text-on-surface uppercase tracking-widest font-label-caps text-[10px] bg-transparent cursor-pointer rounded">
+                            Cancelar
+                          </button>
+                          <button type="submit" className="flex-1 py-2.5 bg-on-surface text-background hover:bg-primary hover:text-white uppercase tracking-widest font-label-caps text-[10px] border-0 cursor-pointer rounded">
+                            Guardar
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
 
               </div>
             )}

@@ -89,6 +89,17 @@ public class SecurityConfig {
                 // Lectura de productos: publico sin token.
                 .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
 
+                // Cupones: validar un codigo lo puede hacer cualquier usuario autenticado;
+                // listar / crear / editar / eliminar es exclusivo del ADMIN.
+                .requestMatchers(HttpMethod.GET, "/api/cupones/validar").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/cupones", "/api/cupones/**").hasAnyAuthority("ADMIN", "MODERATOR")
+                .requestMatchers(HttpMethod.POST, "/api/cupones", "/api/cupones/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/cupones", "/api/cupones/**").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/cupones", "/api/cupones/**").hasAuthority("ADMIN")
+
+                // Puntos de fidelidad: cada usuario consulta los suyos.
+                .requestMatchers("/api/puntos", "/api/puntos/**").authenticated()
+
                 // Cualquier otro endpoint requiere autenticacion.
                 .anyRequest().authenticated()
             )

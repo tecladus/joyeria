@@ -28,4 +28,10 @@ public class CheckoutRequest {
 
     @NotNull(message = "El multiplicador del dispositivo es requerido")
     private BigDecimal multiplicadorDispositivo;
+
+    // Codigo de cupon de embajador (opcional). Si viene, aplica su % de descuento.
+    private String codigoCupon;
+
+    // Puntos de fidelidad que el comprador decide canjear (opcional). Debe ser multiplo de 100.
+    private Integer puntosACanjear;
 }

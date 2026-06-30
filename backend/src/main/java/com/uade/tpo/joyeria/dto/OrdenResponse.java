@@ -15,6 +15,13 @@ public class OrdenResponse {
     private LocalDateTime fecha;
     private String estado;
     private BigDecimal total;
+    // Desglose de promociones aplicadas en la orden.
+    private BigDecimal subtotal;
+    private String cuponCodigo;
+    private BigDecimal descuentoCupon;
+    private Integer puntosCanjeados;
+    private BigDecimal descuentoPuntos;
+    private Integer puntosGanados;
     private String usuario;
     private String metodoPago;
     private String nombreCompleto;

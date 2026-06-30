@@ -4,6 +4,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import CarritoItem from '../components/CarritoItem';
 import { fetchCarrito, cambiarCantidadItem, quitarItemDelCarrito } from '../redux/slices/carritoSlice';
 import { checkout, crearPreferencia } from '../redux/slices/ordenesSlice';
+import { fetchPuntos } from '../redux/slices/puntosSlice';
+import { fetchPerfil } from '../redux/slices/authSlice';
+import { validarCupon } from '../services/api';
 import { adjustPriceByDevice, deviceDetector } from '../services/deviceDetection';
 
 const formatearPrecio = (precio) =>
@@ -14,9 +17,20 @@ function Carrito() {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth);
   const { carrito, cargando, operando, error: errorCarrito } = useSelector((state) => state.carrito);
+  const puntos = useSelector((state) => state.puntos);
   const [error, setError] = useState('');
   const [checkoutExitoso, setCheckoutExitoso] = useState(false);
   const [inicializado, setInicializado] = useState(false);
+
+  // Cupón de embajador
+  const [codigoCuponInput, setCodigoCuponInput] = useState('');
+  const [cuponAplicado, setCuponAplicado] = useState(null);
+  const [errorCupon, setErrorCupon] = useState('');
+  const [validandoCupon, setValidandoCupon] = useState(false);
+
+  // Canje de puntos de fidelidad
+  const [puntosACanjear, setPuntosACanjear] = useState(0);
+  const [puntosGanadosUlt, setPuntosGanadosUlt] = useState(0);
 
   // Estados de Checkout / Pago
   const [paso, setPaso] = useState('carrito'); // 'carrito' o 'pago'
@@ -52,7 +66,64 @@ function Carrito() {
 
   useEffect(() => {
     dispatch(fetchCarrito(auth.idUsuario));
+    dispatch(fetchPuntos());
   }, [auth.idUsuario, dispatch]);
+
+  const items = carrito?.items || [];
+  const total = items.reduce((s, i) => s + (adjustPriceByDevice(i.precioUnitario) * i.cantidad), 0);
+  const cantidadItems = items.reduce((s, i) => s + i.cantidad, 0);
+
+  // ── Reglas del programa de puntos (provienen del backend, con defaults razonables) ──
+  const bloquePuntos = puntos.bloqueCanje || 100;
+  const valorBloque = Number(puntos.valorBloque) || 5;
+  const saldoPuntos = puntos.saldo || 0;
+
+  // ── Descuentos derivados ──
+  const pctCupon = cuponAplicado?.porcentajeDescuento || 0;
+  const descuentoCupon = Math.round(total * pctCupon) / 100;
+  const subtotalConCupon = Math.max(0, total - descuentoCupon);
+
+  // Máximo de puntos canjeables: lo que alcanza el saldo y lo que cubre el monto a pagar.
+  const maxPorSaldo = Math.floor(saldoPuntos / bloquePuntos) * bloquePuntos;
+  const maxPorMonto = Math.floor(subtotalConCupon / valorBloque) * bloquePuntos;
+  const maxCanje = Math.max(0, Math.min(maxPorSaldo, maxPorMonto));
+
+  // Puntos efectivamente aplicables (múltiplos del bloque y acotados al máximo).
+  const puntosEfectivos = Math.max(0, Math.min(Math.floor(puntosACanjear / bloquePuntos) * bloquePuntos, maxCanje));
+  const descuentoPuntos = (puntosEfectivos / bloquePuntos) * valorBloque;
+
+  const totalFinal = Math.max(0, subtotalConCupon - descuentoPuntos);
+  const puntosAGanar = Math.floor(totalFinal);
+
+  // Steppers de canje de puntos
+  const subirPuntos = () => setPuntosACanjear(() => Math.min(maxCanje, puntosEfectivos + bloquePuntos));
+  const bajarPuntos = () => setPuntosACanjear(() => Math.max(0, puntosEfectivos - bloquePuntos));
+  const canjearMaxPuntos = () => setPuntosACanjear(maxCanje);
+  const quitarPuntos = () => setPuntosACanjear(0);
+
+  // Aplicar / quitar cupón de embajador
+  const handleAplicarCupon = async () => {
+    const codigo = codigoCuponInput.trim();
+    if (!codigo) return;
+    setValidandoCupon(true);
+    setErrorCupon('');
+    try {
+      const cupon = await validarCupon(codigo);
+      setCuponAplicado(cupon);
+      setErrorCupon('');
+    } catch (err) {
+      setCuponAplicado(null);
+      setErrorCupon(err.message || 'No se pudo aplicar el cupón.');
+    } finally {
+      setValidandoCupon(false);
+    }
+  };
+
+  const handleQuitarCupon = () => {
+    setCuponAplicado(null);
+    setCodigoCuponInput('');
+    setErrorCupon('');
+  };
 
   const handleCambiarCantidad = async (itemId, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
@@ -109,7 +180,9 @@ function Carrito() {
         ciudad: datosEnvio.ciudad,
         codigoPostal: datosEnvio.codigoPostal,
         telefono: datosEnvio.telefono,
-        multiplicadorDispositivo: deviceDetector.multiplier.multiplier
+        multiplicadorDispositivo: deviceDetector.multiplier.multiplier,
+        codigoCupon: cuponAplicado ? cuponAplicado.codigo : null,
+        puntosACanjear: puntosEfectivos > 0 ? puntosEfectivos : null,
       };
 
       if (metodoPago === 'mercadopago') {
@@ -118,16 +191,16 @@ function Carrito() {
         return;
       }
 
-      await dispatch(checkout({ idUsuario: auth.idUsuario, datosCheckout })).unwrap();
+      const orden = await dispatch(checkout({ idUsuario: auth.idUsuario, datosCheckout })).unwrap();
+      setPuntosGanadosUlt(orden?.puntosGanados || 0);
+      // Refrescar saldo de puntos y perfil (para la barra de navegación)
+      dispatch(fetchPuntos());
+      dispatch(fetchPerfil());
       setCheckoutExitoso(true);
     } catch (err) {
       setError(err.message || err || 'Error al procesar el pedido.');
     }
   };
-
-  const items = carrito?.items || [];
-  const total = items.reduce((s, i) => s + (adjustPriceByDevice(i.precioUnitario) * i.cantidad), 0);
-  const cantidadItems = items.reduce((s, i) => s + i.cantidad, 0);
 
   if (cargando) {
     return (
@@ -511,11 +584,118 @@ function Carrito() {
                 Resumen del Pedido
               </h3>
 
+              {/* Cupón de embajador (estilo código de creador) */}
+              <div className="space-y-2 border-b border-outline-variant/10 pb-6">
+                <label className="font-label-caps text-[10px] text-outline uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">sell</span>
+                  Código de embajador
+                </label>
+                {cuponAplicado ? (
+                  <div className="flex items-center justify-between bg-primary/5 border border-primary/30 rounded-lg px-3 py-2.5">
+                    <div className="flex flex-col">
+                      <span className="font-label-caps text-xs font-semibold text-primary tracking-wider">{cuponAplicado.codigo}</span>
+                      <span className="text-[10px] text-secondary">
+                        {cuponAplicado.embajador} · −{cuponAplicado.porcentajeDescuento}%
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleQuitarCupon}
+                      className="material-symbols-outlined text-base text-outline hover:text-error transition-colors bg-transparent border-0 cursor-pointer"
+                      aria-label="Quitar cupón"
+                    >
+                      close
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ej: MESSI10"
+                      value={codigoCuponInput}
+                      onChange={(e) => setCodigoCuponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAplicarCupon(); }}
+                      className="flex-grow bg-transparent border border-outline/30 rounded-lg py-2 px-3 focus:ring-0 focus:border-primary placeholder:text-outline/30 font-body-md text-on-surface text-sm uppercase"
+                    />
+                    <button
+                      onClick={handleAplicarCupon}
+                      disabled={validandoCupon || !codigoCuponInput.trim()}
+                      className="px-4 bg-on-surface text-background font-label-caps text-[10px] uppercase tracking-widest rounded-lg hover:bg-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-0"
+                    >
+                      {validandoCupon ? '...' : 'Aplicar'}
+                    </button>
+                  </div>
+                )}
+                {errorCupon && <p className="text-[11px] text-error font-body-md">{errorCupon}</p>}
+              </div>
+
+              {/* Puntos de fidelidad (estilo McDonald's) */}
+              {saldoPuntos > 0 && (
+                <div className="space-y-3 border-b border-outline-variant/10 pb-6">
+                  <div className="flex items-center justify-between">
+                    <label className="font-label-caps text-[10px] text-outline uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm">stars</span>
+                      Mis puntos
+                    </label>
+                    <span className="font-label-caps text-[11px] text-primary tabular-nums">{saldoPuntos.toLocaleString('es-AR')} pts</span>
+                  </div>
+
+                  {maxCanje > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between bg-surface-container rounded-lg px-2 py-1.5">
+                        <button
+                          onClick={bajarPuntos}
+                          disabled={puntosEfectivos <= 0}
+                          className="material-symbols-outlined text-base w-8 h-8 flex items-center justify-center rounded-md text-on-surface hover:bg-on-surface/10 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-0 cursor-pointer"
+                          aria-label="Menos puntos"
+                        >
+                          remove
+                        </button>
+                        <div className="text-center">
+                          <span className="font-body-md text-sm text-on-surface tabular-nums block leading-tight">{puntosEfectivos.toLocaleString('es-AR')} pts</span>
+                          <span className="text-[10px] text-secondary">= {formatearPrecio(descuentoPuntos)} de descuento</span>
+                        </div>
+                        <button
+                          onClick={subirPuntos}
+                          disabled={puntosEfectivos >= maxCanje}
+                          className="material-symbols-outlined text-base w-8 h-8 flex items-center justify-center rounded-md text-on-surface hover:bg-on-surface/10 disabled:opacity-30 disabled:cursor-not-allowed bg-transparent border-0 cursor-pointer"
+                          aria-label="Más puntos"
+                        >
+                          add
+                        </button>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-label-caps uppercase tracking-wider">
+                        <button onClick={canjearMaxPuntos} className="text-primary hover:underline bg-transparent border-0 cursor-pointer p-0">Canjear máximo</button>
+                        {puntosEfectivos > 0 && (
+                          <button onClick={quitarPuntos} className="text-outline hover:text-error bg-transparent border-0 cursor-pointer p-0">Quitar</button>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-outline font-body-md leading-relaxed">
+                      Canjeás desde {bloquePuntos} pts ({formatearPrecio(valorBloque)}). Seguí comprando para sumar más.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Desglose del pedido */}
               <div className="space-y-4 text-sm font-body-md text-secondary border-b border-outline-variant/10 pb-6">
                 <div className="flex justify-between items-center">
                   <span>Subtotal ({cantidadItems} artículos)</span>
                   <span className="text-on-surface">{formatearPrecio(total)}</span>
                 </div>
+                {descuentoCupon > 0 && (
+                  <div className="flex justify-between items-center text-primary">
+                    <span>Cupón {cuponAplicado?.codigo}</span>
+                    <span>−{formatearPrecio(descuentoCupon)}</span>
+                  </div>
+                )}
+                {descuentoPuntos > 0 && (
+                  <div className="flex justify-between items-center text-primary">
+                    <span>Puntos ({puntosEfectivos.toLocaleString('es-AR')})</span>
+                    <span>−{formatearPrecio(descuentoPuntos)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span>Envío internacional</span>
                   {paso === 'pago' ? (
@@ -528,8 +708,15 @@ function Carrito() {
 
               <div className="flex justify-between items-center text-base font-semibold text-on-surface">
                 <span>Total Estimado</span>
-                <span className="font-display-lg text-xl text-primary">{formatearPrecio(total)}</span>
+                <span className="font-display-lg text-xl text-primary">{formatearPrecio(totalFinal)}</span>
               </div>
+
+              {puntosAGanar > 0 && (
+                <div className="flex items-center justify-center gap-1.5 text-[11px] font-label-caps text-primary tracking-wider uppercase bg-primary/5 rounded-lg py-2">
+                  <span className="material-symbols-outlined text-sm">add_circle</span>
+                  Ganás {puntosAGanar.toLocaleString('es-AR')} puntos con esta compra
+                </div>
+              )}
 
               {paso === 'carrito' ? (
                 <button
@@ -578,9 +765,21 @@ function Carrito() {
               </p>
             </div>
 
+            {puntosGanadosUlt > 0 && (
+              <div className="flex items-center justify-center gap-2 text-primary bg-primary/5 border border-primary/20 rounded-lg py-3 px-4">
+                <span className="material-symbols-outlined text-lg">stars</span>
+                <span className="font-label-caps text-xs tracking-wider uppercase">
+                  Sumaste {puntosGanadosUlt.toLocaleString('es-AR')} puntos
+                </span>
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setCheckoutExitoso(false);
+                setCuponAplicado(null);
+                setCodigoCuponInput('');
+                setPuntosACanjear(0);
                 navigate('/productos');
               }}
               className="w-full py-4 bg-on-surface text-background font-label-caps text-label-caps hover:bg-primary transition-all duration-300 uppercase tracking-widest"

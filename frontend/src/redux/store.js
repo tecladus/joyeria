@@ -21,6 +21,8 @@ import categoriasReducer from './slices/categoriasSlice';
 import ordenesReducer from './slices/ordenesSlice';
 import usuariosReducer from './slices/usuariosSlice';
 import contactoReducer from './slices/contactoSlice';
+import cuponesReducer from './slices/cuponesSlice';
+import puntosReducer from './slices/puntosSlice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -32,6 +34,8 @@ const rootReducer = combineReducers({
   ordenes: ordenesReducer,
   usuarios: usuariosReducer,
   contacto: contactoReducer,
+  cupones: cuponesReducer,
+  puntos: puntosReducer,
 });
 
 // Solo se persisten sesión, tema y favoritos; el resto se vuelve a pedir al backend

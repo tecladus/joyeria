@@ -30,6 +30,29 @@ public class Orden {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
+    // ── Cupon de embajador y puntos de fidelidad ─────────────────────────────
+    // Monto bruto antes de descuentos (suma de los detalles). total = subtotal - descuentoCupon - descuentoPuntos.
+    @Column(precision = 10, scale = 2)
+    private BigDecimal subtotal;
+
+    // Codigo del cupon aplicado (null si no se uso ninguno).
+    @Column(name = "cupon_codigo", length = 50)
+    private String cuponCodigo;
+
+    @Column(name = "descuento_cupon", precision = 10, scale = 2)
+    private BigDecimal descuentoCupon = BigDecimal.ZERO;
+
+    // Puntos que el comprador canjeo en esta orden y el descuento en dinero que generaron.
+    @Column(name = "puntos_canjeados")
+    private Integer puntosCanjeados = 0;
+
+    @Column(name = "descuento_puntos", precision = 10, scale = 2)
+    private BigDecimal descuentoPuntos = BigDecimal.ZERO;
+
+    // Puntos que esta compra le otorgo al comprador.
+    @Column(name = "puntos_ganados")
+    private Integer puntosGanados = 0;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

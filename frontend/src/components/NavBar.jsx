@@ -227,6 +227,16 @@ function NavBar() {
                         </span>
                       </div>
 
+                      <div className="px-4 py-2 border-b border-outline-variant/10 mb-2 flex items-center justify-between">
+                        <span className="font-label-caps text-[10px] text-outline uppercase tracking-widest flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm text-primary">stars</span>
+                          Mis Puntos
+                        </span>
+                        <span className="font-body-md text-primary text-xs font-semibold tabular-nums">
+                          {(auth.puntos || 0).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+
                       {esComprador && (
                         <button
                           onClick={handleConvertirseEnVendedor}
