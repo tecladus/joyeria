@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useModal } from '../components/ModalContext';
 import { fetchUsuarios, cambiarRolUsuarioExistente, eliminarUsuarioExistente } from '../redux/slices/usuariosSlice';
 import { fetchTodasLasOrdenes, actualizarEstadoOrdenExistente } from '../redux/slices/ordenesSlice';
-import { fetchProductos, editarProductoExistente, eliminarProductoExistente } from '../redux/slices/productosSlice';
+import { fetchProductos, crearNuevoProducto, editarProductoExistente, eliminarProductoExistente } from '../redux/slices/productosSlice';
 import { fetchCategorias, crearNuevaCategoria, editarCategoriaExistente, eliminarCategoriaExistente } from '../redux/slices/categoriasSlice';
 import { fetchCupones, crearNuevoCupon, editarCuponExistente, eliminarCuponExistente } from '../redux/slices/cuponesSlice';
 import { SELLOS_URGENCIA } from '../services/urgencia';
@@ -44,7 +44,8 @@ function PanelAdmin() {
   // Formulario Categoría
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
 
-  // Editar Producto Modal/Estado
+  // Crear / Editar Producto Modal/Estado
+  const [creandoProducto, setCreandoProducto] = useState(false);
   const [prodAEditar, setProdAEditar] = useState(null);
   const [editNombre, setEditNombre] = useState('');
   const [editDescripcion, setEditDescripcion] = useState('');
@@ -119,7 +120,20 @@ function PanelAdmin() {
     }
   };
 
+  const abrirCreacionProducto = () => {
+    setProdAEditar(null);
+    setEditNombre('');
+    setEditDescripcion('');
+    setEditPrecio('');
+    setEditStock('');
+    setEditImagenUrl('');
+    setEditSelloUrgencia('NINGUNO');
+    setEditIdCategoria('');
+    setCreandoProducto(true);
+  };
+
   const abrirEdicionProducto = (prod) => {
+    setCreandoProducto(false);
     setProdAEditar(prod);
     setEditNombre(prod.nombre || '');
     setEditDescripcion(prod.descripcion || '');
@@ -130,25 +144,35 @@ function PanelAdmin() {
     setEditIdCategoria(prod.idCategoria || '');
   };
 
+  const cerrarFormProducto = () => {
+    setProdAEditar(null);
+    setCreandoProducto(false);
+  };
+
   const handleGuardarProducto = async (e) => {
     e.preventDefault();
-    if (!prodAEditar) return;
+    if (!prodAEditar && !creandoProducto) return;
     try {
-      const datosActualizados = {
+      const datos = {
         nombre: editNombre,
         descripcion: editDescripcion,
         precio: parseFloat(editPrecio),
-        descuento: prodAEditar.descuento,
+        descuento: creandoProducto ? 0 : prodAEditar.descuento,
         stock: parseInt(editStock, 10),
         imagenUrl: editImagenUrl || null,
         selloUrgencia: editSelloUrgencia || 'NINGUNO',
         categoriaId: Number(editIdCategoria)
       };
-      await dispatch(editarProductoExistente({ id: prodAEditar.idProducto, vendedorId: auth.idUsuario, datos: datosActualizados })).unwrap();
-      mostrarToast('Producto modificado correctamente');
-      setProdAEditar(null);
+      if (creandoProducto) {
+        await dispatch(crearNuevoProducto({ vendedorId: auth.idUsuario, datos })).unwrap();
+        mostrarToast('Producto creado correctamente');
+      } else {
+        await dispatch(editarProductoExistente({ id: prodAEditar.idProducto, vendedorId: auth.idUsuario, datos })).unwrap();
+        mostrarToast('Producto modificado correctamente');
+      }
+      cerrarFormProducto();
     } catch (err) {
-      setError(err.message || 'Error al actualizar producto.');
+      setError(err.message || 'Error al guardar el producto.');
     }
   };
 
@@ -455,6 +479,18 @@ function PanelAdmin() {
             {/* TABS: Catálogo */}
             {tabActiva === 'catalog' && (
               <div className="space-y-6 animate-fade-in">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-label-caps text-xs tracking-wider uppercase text-on-surface font-semibold">
+                    Catálogo de Piezas
+                  </h3>
+                  <button
+                    onClick={abrirCreacionProducto}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-on-surface text-background hover:bg-primary hover:text-white transition-all uppercase tracking-widest font-label-caps text-[10px] border-0 cursor-pointer rounded"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    Nueva Pieza
+                  </button>
+                </div>
                 <div className="overflow-x-auto bg-surface-container-lowest border border-outline-variant/20 rounded shadow-sm">
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
@@ -514,121 +550,6 @@ function PanelAdmin() {
                     </tbody>
                   </table>
                 </div>
-
-                {/* Modal de edición completo */}
-                {prodAEditar && (
-                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                    <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6">
-                      <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
-                        <h4 className="font-display-lg text-lg text-on-surface">Editar Pieza</h4>
-                        <button onClick={() => setProdAEditar(null)} className="bg-transparent border-0 text-outline hover:text-on-surface cursor-pointer">
-                          <span className="material-symbols-outlined">close</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleGuardarProducto} className="space-y-4 font-body-md text-sm">
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Nombre</label>
-                          <input 
-                            type="text" 
-                            value={editNombre} 
-                            onChange={(e) => setEditNombre(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
-                            required 
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descripción</label>
-                          <textarea 
-                            value={editDescripcion} 
-                            onChange={(e) => setEditDescripcion(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary h-20 resize-none" 
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Precio ($)</label>
-                            <input 
-                              type="number" 
-                              min="0"
-                              step="0.01" 
-                              value={editPrecio} 
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === '' || parseFloat(val) >= 0) setEditPrecio(val);
-                              }}
-                              className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
-                              required 
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Stock (u)</label>
-                            <input 
-                              type="number" 
-                              min="0" 
-                              value={editStock} 
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === '' || parseInt(val, 10) >= 0) setEditStock(val);
-                              }}
-                              className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" 
-                              required 
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Categoría</label>
-                          <select
-                            value={editIdCategoria}
-                            onChange={(e) => setEditIdCategoria(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
-                            required
-                          >
-                            <option value="" className="bg-background text-on-surface">Seleccionar Categoría</option>
-                            {categorias.map((cat) => (
-                              <option key={cat.idCategoria} value={cat.idCategoria} className="bg-background text-on-surface">
-                                {cat.nombre}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">URL de la Imagen</label>
-                          <input
-                            type="url"
-                            value={editImagenUrl}
-                            onChange={(e) => setEditImagenUrl(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Sello de Urgencia</label>
-                          <select
-                            value={editSelloUrgencia}
-                            onChange={(e) => setEditSelloUrgencia(e.target.value)}
-                            className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
-                          >
-                            {SELLOS_URGENCIA.map((opcion) => (
-                              <option key={opcion.value} value={opcion.value} className="bg-background text-on-surface">
-                                {opcion.label}
-                              </option>
-                            ))}
-                          </select>
-                          <span className="block text-[10px] text-outline/70 mt-1 normal-case">
-                            “Pocas unidades” (stock bajo) y “oferta por tiempo limitado” (descuento) aparecen automáticamente.
-                          </span>
-                        </div>
-                        <div className="pt-4 flex gap-4">
-                          <button type="button" onClick={() => setProdAEditar(null)} className="flex-1 py-2.5 border border-outline text-secondary font-label-caps text-xs uppercase hover:bg-surface-container-low transition-colors bg-transparent">
-                            Cancelar
-                          </button>
-                          <button type="submit" className="flex-1 py-2.5 bg-primary text-white font-label-caps text-xs uppercase hover:bg-primary/90 transition-colors border-0">
-                            Guardar
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -919,58 +840,173 @@ function PanelAdmin() {
                   </table>
                 </div>
 
-                {/* Modal edición de cupón */}
-                {cuponAEditar && (
-                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-                    <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6">
-                      <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
-                        <h4 className="font-display-lg text-lg text-on-surface">Editar Cupón</h4>
-                        <button onClick={() => setCuponAEditar(null)} className="bg-transparent border-0 text-outline hover:text-on-surface cursor-pointer">
-                          <span className="material-symbols-outlined">close</span>
-                        </button>
-                      </div>
-                      <form onSubmit={handleGuardarCupon} className="space-y-4 font-body-md text-sm">
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Código</label>
-                          <input type="text" value={cuponAEditar.codigo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, codigo: e.target.value.toUpperCase() })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary uppercase" required />
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase font-label-caps text-outline mb-1">Embajador</label>
-                          <input type="text" value={cuponAEditar.embajador} onChange={(e) => setCuponAEditar({ ...cuponAEditar, embajador: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descuento (%)</label>
-                            <input type="number" min="1" max="100" value={cuponAEditar.porcentajeDescuento} onChange={(e) => setCuponAEditar({ ...cuponAEditar, porcentajeDescuento: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
-                          </div>
-                          <div>
-                            <label className="block text-xs uppercase font-label-caps text-outline mb-1">Tope usos</label>
-                            <input type="number" min="1" placeholder="∞" value={cuponAEditar.usosMaximos} onChange={(e) => setCuponAEditar({ ...cuponAEditar, usosMaximos: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" />
-                          </div>
-                        </div>
-                        <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
-                          <input type="checkbox" checked={cuponAEditar.activo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, activo: e.target.checked })} className="text-primary focus:ring-primary border-outline-variant rounded cursor-pointer" />
-                          Cupón activo
-                        </label>
-                        <div className="flex gap-3 pt-2">
-                          <button type="button" onClick={() => setCuponAEditar(null)} className="flex-1 py-2.5 border border-outline/30 text-secondary hover:text-on-surface uppercase tracking-widest font-label-caps text-[10px] bg-transparent cursor-pointer rounded">
-                            Cancelar
-                          </button>
-                          <button type="submit" className="flex-1 py-2.5 bg-on-surface text-background hover:bg-primary hover:text-white uppercase tracking-widest font-label-caps text-[10px] border-0 cursor-pointer rounded">
-                            Guardar
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
-
               </div>
             )}
 
           </div>
         )}
       </main>
+
+      {/* Modal Crear / Editar Producto — fuera de los contenedores animados para que cubra toda la pantalla */}
+      {(prodAEditar || creandoProducto) && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
+              <h4 className="font-display-lg text-lg text-on-surface">{creandoProducto ? 'Nueva Pieza' : 'Editar Pieza'}</h4>
+              <button onClick={cerrarFormProducto} className="bg-transparent border-0 text-outline hover:text-on-surface cursor-pointer">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleGuardarProducto} className="space-y-4 font-body-md text-sm">
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={editNombre}
+                  onChange={(e) => setEditNombre(e.target.value)}
+                  className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descripción</label>
+                <textarea
+                  value={editDescripcion}
+                  onChange={(e) => setEditDescripcion(e.target.value)}
+                  className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary h-20 resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase font-label-caps text-outline mb-1">Precio ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editPrecio}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || parseFloat(val) >= 0) setEditPrecio(val);
+                    }}
+                    className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-label-caps text-outline mb-1">Stock (u)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editStock}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || parseInt(val, 10) >= 0) setEditStock(val);
+                    }}
+                    className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Categoría</label>
+                <select
+                  value={editIdCategoria}
+                  onChange={(e) => setEditIdCategoria(e.target.value)}
+                  className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
+                  required
+                >
+                  <option value="" className="bg-background text-on-surface">Seleccionar Categoría</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.idCategoria} value={cat.idCategoria} className="bg-background text-on-surface">
+                      {cat.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">URL de la Imagen</label>
+                <input
+                  type="url"
+                  value={editImagenUrl}
+                  onChange={(e) => setEditImagenUrl(e.target.value)}
+                  className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Sello de Urgencia</label>
+                <select
+                  value={editSelloUrgencia}
+                  onChange={(e) => setEditSelloUrgencia(e.target.value)}
+                  className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary cursor-pointer"
+                >
+                  {SELLOS_URGENCIA.map((opcion) => (
+                    <option key={opcion.value} value={opcion.value} className="bg-background text-on-surface">
+                      {opcion.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="block text-[10px] text-outline/70 mt-1 normal-case">
+                  “Pocas unidades” (stock bajo) y “oferta por tiempo limitado” (descuento) aparecen automáticamente.
+                </span>
+              </div>
+              <div className="pt-4 flex gap-4">
+                <button type="button" onClick={cerrarFormProducto} className="flex-1 py-2.5 border border-outline text-secondary font-label-caps text-xs uppercase hover:bg-surface-container-low transition-colors bg-transparent">
+                  Cancelar
+                </button>
+                <button type="submit" className="flex-1 py-2.5 bg-primary text-white font-label-caps text-xs uppercase hover:bg-primary/90 transition-colors border-0">
+                  {creandoProducto ? 'Crear' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal edición de cupón — fuera de los contenedores animados para que cubra toda la pantalla */}
+      {cuponAEditar && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-background border border-outline-variant/20 rounded shadow-2xl p-8 max-w-md w-full space-y-6">
+            <div className="flex justify-between items-center border-b border-outline-variant/10 pb-4">
+              <h4 className="font-display-lg text-lg text-on-surface">Editar Cupón</h4>
+              <button onClick={() => setCuponAEditar(null)} className="bg-transparent border-0 text-outline hover:text-on-surface cursor-pointer">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleGuardarCupon} className="space-y-4 font-body-md text-sm">
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Código</label>
+                <input type="text" value={cuponAEditar.codigo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, codigo: e.target.value.toUpperCase() })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary uppercase" required />
+              </div>
+              <div>
+                <label className="block text-xs uppercase font-label-caps text-outline mb-1">Embajador</label>
+                <input type="text" value={cuponAEditar.embajador} onChange={(e) => setCuponAEditar({ ...cuponAEditar, embajador: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase font-label-caps text-outline mb-1">Descuento (%)</label>
+                  <input type="number" min="1" max="100" value={cuponAEditar.porcentajeDescuento} onChange={(e) => setCuponAEditar({ ...cuponAEditar, porcentajeDescuento: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" required />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-label-caps text-outline mb-1">Tope usos</label>
+                  <input type="number" min="1" placeholder="∞" value={cuponAEditar.usosMaximos} onChange={(e) => setCuponAEditar({ ...cuponAEditar, usosMaximos: e.target.value })} className="w-full bg-transparent border border-outline/35 rounded p-2 text-on-surface focus:ring-primary focus:border-primary" />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-xs text-secondary cursor-pointer">
+                <input type="checkbox" checked={cuponAEditar.activo} onChange={(e) => setCuponAEditar({ ...cuponAEditar, activo: e.target.checked })} className="text-primary focus:ring-primary border-outline-variant rounded cursor-pointer" />
+                Cupón activo
+              </label>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setCuponAEditar(null)} className="flex-1 py-2.5 border border-outline/30 text-secondary hover:text-on-surface uppercase tracking-widest font-label-caps text-[10px] bg-transparent cursor-pointer rounded">
+                  Cancelar
+                </button>
+                <button type="submit" className="flex-1 py-2.5 bg-on-surface text-background hover:bg-primary hover:text-white uppercase tracking-widest font-label-caps text-[10px] border-0 cursor-pointer rounded">
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (
